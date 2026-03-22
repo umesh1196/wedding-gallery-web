@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+@theme {
+  --font-headline: "Newsreader", serif;
+  --font-body: "Manrope", sans-serif;
+  --font-label: "Inter", sans-serif;
+  --color-rose-accent: #c9506a;
+  --color-surface: #131313;
+  --color-on-surface: #e5e2e1;
+  --color-background: #0d0d0d;
+  --color-outline: #a48a8d;
+  --color-surface-container: #201f1f;
+}
+
+@layer base {
+  :root {
+    --mobile-safe-top: max(1rem, env(safe-area-inset-top));
+    --mobile-safe-bottom: max(1rem, env(safe-area-inset-bottom));
+    --mobile-home-nav-height: calc(5.5rem + env(safe-area-inset-bottom));
+  }
+
+  html { background-color: #0d0d0d; }
+  body {
+    margin: 0;
+    background-color: #0d0d0d;
+    color: #e5e2e1;
+    overscroll-behavior-y: none;
+  }
+  * { box-sizing: border-box; }
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,200..800;1,200..800&family=Inter:wght@100..900&family=Manrope:wght@200..800&display=swap');
+
+.wrap { width: 100%; max-width: 1280px; margin: 0 auto; padding: 0 1rem; }
+@media (min-width: 640px)  { .wrap { padding: 0 1.5rem; } }
+@media (min-width: 768px)  { .wrap { padding: 0 2.5rem; } }
+@media (min-width: 1024px) { .wrap { padding: 0 4rem; } }
+@media (min-width: 1280px) { .wrap { padding: 0 6rem; } }
+
+.label { font-family: var(--font-label, Inter, sans-serif); font-size: 10px; text-transform: uppercase; letter-spacing: 0.15rem; }
+@media (min-width: 768px)  { .label { font-size: 11px; } }
+@media (min-width: 1024px) { .label { font-size: 12px; } }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+.photo-grade { filter: sepia(15%) contrast(105%) saturate(85%) brightness(95%); }
+
+.mobile-safe-top { padding-top: var(--mobile-safe-top); }
+.mobile-safe-bottom { padding-bottom: var(--mobile-safe-bottom); }
+.mobile-home-nav-spacer { padding-bottom: var(--mobile-home-nav-height); }
+
+.page-header {
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+}
+
+.section-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.soft-panel {
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015));
+  backdrop-filter: blur(16px);
+}
+
+@media (min-width: 768px) {
+  .page-header {
+    padding-top: 2.75rem;
+    padding-bottom: 2.25rem;
+  }
+
+  .section-stack {
+    gap: 3.5rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .mobile-safe-top,
+  .mobile-safe-bottom,
+  .mobile-home-nav-spacer {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+}
