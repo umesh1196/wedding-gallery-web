@@ -24,11 +24,6 @@ export function EventChapters({
             {isEarlyGallery ? 'The story begins here' : 'Move through the celebration'}
           </h2>
         </div>
-        <p className="max-w-sm font-body text-sm leading-relaxed text-white/54">
-          {isEarlyGallery
-            ? 'As each part of the wedding is photographed and curated, new chapters can arrive here without the gallery feeling unfinished.'
-            : 'Each chapter holds its own mood, from the playful energy before the wedding to the quieter late-night glow after it.'}
-        </p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-12">
@@ -86,16 +81,11 @@ export function EventChapters({
 
       {upcomingEvents.length > 0 && (
         <div className="mt-8 md:mt-10">
-          <div className="mb-4 flex items-end justify-between gap-4 md:mb-5">
-            <div>
-              <p className="label text-outline">Still To Come</p>
-              <h3 className="mt-2 font-headline text-[1.9rem] font-light text-white md:text-[2.35rem]">
-                More chapters will arrive soon
-              </h3>
-            </div>
-            <p className="hidden max-w-sm font-body text-sm leading-relaxed text-white/50 md:block">
-              These parts of the celebration have not been published yet, but they will join the gallery as the wedding story unfolds.
-            </p>
+          <div className="mb-4 md:mb-5">
+            <p className="label text-outline">Still To Come</p>
+            <h3 className="mt-2 font-headline text-[1.9rem] font-light text-white md:text-[2.35rem]">
+              More to come
+            </h3>
           </div>
 
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">

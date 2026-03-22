@@ -15,9 +15,6 @@ export function HighlightStrip({ photos }: HighlightStripProps) {
             A few frames that set the tone
           </h2>
         </div>
-        <p className="hidden max-w-xs font-body text-sm leading-relaxed text-white/54 md:block">
-          A quiet first pass through the celebration before you step into each chapter.
-        </p>
       </div>
 
       <div className="grid gap-3 md:grid-cols-[1.2fr_0.8fr] md:gap-4">

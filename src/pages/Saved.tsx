@@ -24,8 +24,8 @@ export default function Saved() {
       <section className="wrap page-header">
         <p className="label text-outline mb-1">Collected moments</p>
         <h2 className="font-headline text-[36px] md:text-5xl lg:text-6xl font-light text-white leading-tight">Saved</h2>
-        <p className="mt-2 max-w-xl font-body text-sm leading-relaxed text-white/62 md:text-base">
-          Save any photo you love and it will gather here for you alone, making it easier to return to the portraits, family frames, and fleeting moments that stay with you.
+        <p className="mt-2 font-body text-sm text-white/60">
+          Your personal collection — private to you.
         </p>
         {savedPhotos.length > 0 && (
           <p className="label text-outline mt-3">
@@ -41,10 +41,7 @@ export default function Saved() {
             Your saved moments will appear here
           </h3>
           <p className="font-body text-sm text-outline leading-relaxed max-w-[240px]">
-            Open any photo and tap the heart to keep it close.
-          </p>
-          <p className="mt-3 max-w-[280px] font-body text-sm leading-relaxed text-white/46">
-            Saving a moment is personal to you. It does not change the main gallery for anyone else.
+            Open any photo and tap ♡ to keep it close.
           </p>
         </div>
       ) : (
@@ -67,9 +64,6 @@ export default function Saved() {
                 <div className="absolute inset-0 flex items-center justify-between px-5 md:px-8">
                   <div>
                     <h4 className="font-headline italic text-2xl md:text-3xl lg:text-4xl text-white">{event.title}</h4>
-                    <p className="mt-2 max-w-sm font-body text-xs leading-relaxed text-white/58 md:text-sm">
-                      Open this chapter to see only the moments you have already saved from it.
-                    </p>
                   </div>
                   <div className="flex items-center gap-1.5 text-rose-accent">
                     <Heart className="w-3.5 h-3.5 fill-current" />

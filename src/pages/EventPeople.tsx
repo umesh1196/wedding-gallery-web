@@ -100,12 +100,6 @@ export default function EventPeople() {
       <section className="wrap page-header">
         <p className="mb-1 label text-outline">{event?.title || 'Event'}</p>
         <h2 className="font-headline text-[2.5rem] font-light text-white md:text-5xl lg:text-6xl">People</h2>
-        <p className="mt-2 max-w-xl font-body text-sm leading-relaxed text-white/62 md:text-base">
-          Move through the celebration by the people who matter most, then gather the moments you want to keep close.
-        </p>
-        <p className="mt-3 max-w-xl font-body text-sm leading-relaxed text-white/46 md:text-[15px]">
-          This is especially helpful for family members who want to quickly find portraits, candid moments, and group photos without browsing the full chapter first.
-        </p>
       </section>
 
       <PeopleStrip
@@ -207,8 +201,8 @@ export default function EventPeople() {
             </button>
           </div>
 
-          <p className="mb-6 max-w-sm font-body text-sm leading-relaxed text-outline">
-            Use a selfie to surface matching photos from this event. It is still a preview, but it can be a helpful shortcut if you want to find your side of the family more quickly.
+          <p className="mb-6 font-body text-sm text-outline">
+            Upload a selfie to find photos of yourself in this event.
           </p>
 
           <div className="grid gap-3 pb-2">

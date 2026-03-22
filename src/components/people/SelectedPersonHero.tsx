@@ -45,9 +45,7 @@ export function SelectedPersonHero({
               <div>
                 <p className="label text-outline">Moments with</p>
                 <h3 className="font-headline text-3xl italic text-white md:text-4xl">{selectedPerson}</h3>
-                <p className="mt-2 max-w-sm font-body text-sm leading-relaxed text-white/60">
-                  A focused view of the frames where {selectedPerson} appears, ready to save, revisit, or gather into a personal collection.
-                </p>
+                <p className="mt-1 label text-white/46">{photoCount} photo{photoCount !== 1 ? 's' : ''}</p>
               </div>
             </div>
           </div>
@@ -55,12 +53,7 @@ export function SelectedPersonHero({
           <div className="flex flex-col justify-between p-5 md:p-7">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <p className="label text-white/42">{isSelecting ? 'Selection Mode' : 'Chapter View'}</p>
-                <p className="mt-2 font-body text-sm leading-relaxed text-white/74">
-                  {isSelecting
-                    ? `${selectedCount} chosen from ${photoCount} matching photo${photoCount !== 1 ? 's' : ''}.`
-                    : `${photoCount} matching photo${photoCount !== 1 ? 's' : ''} gathered here.`}
-                </p>
+                <p className="label text-white/42">{isSelecting ? `${selectedCount} selected` : `${photoCount} photo${photoCount !== 1 ? 's' : ''}`}</p>
               </div>
               <button
                 onClick={onBackToPeople}

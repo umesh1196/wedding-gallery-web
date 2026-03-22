@@ -90,22 +90,12 @@ export default function EventDetail() {
           onStartSelection={() => setIsSelecting(true)}
         />
 
-          <section className="wrap pb-5 pt-5 md:pb-7 md:pt-7">
-            <div className="soft-panel rounded-[1.6rem] px-5 py-4 md:px-6 md:py-5">
-              <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
-                <div>
-                  <p className="label text-white/40">Chapter Flow</p>
-                  <p className="mt-2 max-w-2xl font-body text-sm leading-relaxed text-white/68 md:text-[15px]">
-                    {editorial?.chapterNote}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 rounded-full border border-white/8 bg-black/12 px-3 py-2 text-white/72 backdrop-blur-sm">
-                  <Link2 className="h-4 w-4 text-rose-accent" />
-                  <span className="label">{eventPhotos.length} moments · {editorial?.moodLabel ?? 'Quietly curated'}</span>
-                </div>
-              </div>
+          <div className="wrap pt-4 pb-2">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-black/12 px-3 py-2 text-white/72 backdrop-blur-sm">
+              <Link2 className="h-4 w-4 text-rose-accent" />
+              <span className="label">{eventPhotos.length} moments · {editorial?.moodLabel ?? 'Quietly curated'}</span>
             </div>
-          </section>
+          </div>
         </>
       )}
 
