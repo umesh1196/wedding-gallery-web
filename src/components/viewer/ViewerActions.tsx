@@ -24,7 +24,7 @@ export function ViewerActions({
     <div className="flex items-center gap-0.5">
       <button
         onClick={onDownload}
-        className="flex h-9 w-9 items-center justify-center rounded-full text-white/68 transition-colors hover:bg-white/8 hover:text-white"
+        className="flex h-9 w-9 items-center justify-center rounded-full text-foreground/68 transition-colors hover:bg-foreground/8 hover:text-foreground"
         aria-label="Save photo"
       >
         <Download className="h-5 w-5" />
@@ -32,7 +32,7 @@ export function ViewerActions({
 
       <button
         onClick={onShare}
-        className="flex h-9 w-9 items-center justify-center rounded-full text-white/68 transition-colors hover:bg-white/8 hover:text-white"
+        className="flex h-9 w-9 items-center justify-center rounded-full text-foreground/68 transition-colors hover:bg-foreground/8 hover:text-foreground"
         aria-label="Share photo"
       >
         <Share2 className="h-5 w-5" />
@@ -40,15 +40,15 @@ export function ViewerActions({
 
       <button
         onClick={onToggleFavourite}
-        className="flex h-9 w-9 items-center justify-center rounded-full text-white transition-colors hover:bg-white/8"
+        className="flex h-9 w-9 items-center justify-center rounded-full text-foreground transition-colors hover:bg-foreground/8"
         aria-label={liked ? 'Remove from favourites' : 'Add to favourites'}
       >
-        <Heart className={cn('h-5 w-5', liked ? 'fill-current text-rose-accent' : 'text-white/88')} />
+        <Heart className={cn('h-5 w-5', liked ? 'fill-current text-rose-accent' : 'text-foreground/88')} />
       </button>
 
       <button
         onClick={onAddToAlbum}
-        className="flex h-9 w-9 items-center justify-center rounded-full text-white/68 transition-colors hover:bg-white/8 hover:text-white"
+        className="flex h-9 w-9 items-center justify-center rounded-full text-foreground/68 transition-colors hover:bg-foreground/8 hover:text-foreground"
         aria-label="Add photo to album"
       >
         <Plus className="h-5 w-5" />
@@ -57,8 +57,8 @@ export function ViewerActions({
       <button
         onClick={onToggleDetails}
         className={cn(
-          'flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-white/8',
-          showDetails ? 'text-white' : 'text-white/72'
+          'flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-foreground/8',
+          showDetails ? 'text-foreground' : 'text-foreground/72'
         )}
         aria-label={showDetails ? 'Hide details' : 'Show details'}
       >

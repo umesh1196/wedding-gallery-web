@@ -16,16 +16,16 @@ export default function EventsList() {
       {/* Page header */}
       <section className="wrap page-header overflow-visible">
         <p className="label text-outline mb-1">Shruti & Umesh</p>
-        <h2 className="font-headline pt-1 text-[36px] md:text-5xl lg:text-6xl font-light text-white leading-[1.12]">
-          Events
+        <h2 className="font-headline pt-1 text-[36px] md:text-5xl lg:text-6xl font-light text-foreground leading-[1.12]">
+          Chapters
         </h2>
         <p className="label text-outline mt-3">
-          {publishedEvents.length} live{publishedEvents.length !== 1 ? '' : ''}
+          {publishedEvents.length} chapter{publishedEvents.length !== 1 ? 's' : ''}
           {upcomingEvents.length > 0 ? ` · ${upcomingEvents.length} coming soon` : ''}
         </p>
         {latestPublishedEvent && (
           <div className="mt-3 inline-flex rounded-full border border-rose-accent/18 bg-rose-accent/8 px-3 py-2">
-            <span className="label text-rose-accent">Recently added: {latestPublishedEvent.title}</span>
+            <span className="label text-rose-accent">Latest chapter: {latestPublishedEvent.title}</span>
           </div>
         )}
       </section>
@@ -36,7 +36,7 @@ export default function EventsList() {
           <Link
             key={event.id}
             to={`/event/${event.id}`}
-            state={{ backTo: '/events', backLabel: 'Events' }}
+            state={{ backTo: '/events', backLabel: 'Chapters' }}
             className="group relative block overflow-hidden rounded-[1.75rem]"
           >
             <div className="aspect-[2/1] md:aspect-[3/1]">
@@ -68,15 +68,15 @@ export default function EventsList() {
           <div className="mt-8 md:mt-10">
             <div className="mb-4 md:mb-5">
               <p className="label text-outline">Still To Come</p>
-              <h3 className="mt-2 font-headline text-[1.9rem] font-light text-white md:text-[2.35rem]">
-                More to come
+              <h3 className="mt-2 font-headline text-[1.9rem] font-light text-foreground md:text-[2.35rem]">
+                Chapters yet to unfold
               </h3>
             </div>
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
               {upcomingEvents.map((event) => (
                 <div
                   key={event.id}
-                  className="soft-panel overflow-hidden rounded-[1.65rem] border border-white/6"
+                  className="soft-panel overflow-hidden rounded-[1.65rem] border border-foreground/6"
                 >
                   <div className="relative aspect-[1.1] overflow-hidden">
                     <img

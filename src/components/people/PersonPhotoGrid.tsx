@@ -44,7 +44,7 @@ export function PersonPhotoGrid({
             return (
               <div
                 key={photo.id}
-                className="overflow-hidden rounded-[1.35rem] border border-white/6 bg-surface"
+                className="overflow-hidden rounded-[1.35rem] border border-foreground/6 bg-surface"
               >
                 <div
                   className="relative aspect-[0.95] overflow-hidden"
@@ -70,7 +70,7 @@ export function PersonPhotoGrid({
                       <div className="absolute top-2 left-2">
                         {isSelected ? (
                           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#1a73e8] shadow-[0_0_0_2px_rgba(255,255,255,0.92)]">
-                            <Check className="h-3.5 w-3.5 text-white stroke-[3]" />
+                            <Check className="h-3.5 w-3.5 text-foreground stroke-[3]" />
                           </div>
                         ) : (
                           <div className="h-6 w-6 rounded-full border-2 border-white bg-black/18 shadow-[0_0_0_1px_rgba(0,0,0,0.18)]" />
@@ -103,7 +103,7 @@ export function PersonPhotoGrid({
                 {!isSelecting && (
                   <div className="flex items-center justify-between gap-2 px-3 py-3">
                     <div className="min-w-0">
-                      <p className="truncate font-body text-sm text-white/88">{photo.alt}</p>
+                      <p className="truncate font-body text-sm text-foreground/88">{photo.alt}</p>
                       <p className="mt-1 label text-outline">{photo.date}</p>
                     </div>
                     <div className="flex items-center gap-1">
@@ -113,7 +113,7 @@ export function PersonPhotoGrid({
                           'flex h-9 w-9 items-center justify-center rounded-full transition-colors',
                           isFavourite(photo.id)
                             ? 'bg-rose-accent/14 text-rose-accent'
-                            : 'bg-white/6 text-white/72 hover:bg-white/10 hover:text-white'
+                            : 'bg-foreground/6 text-foreground/72 hover:bg-foreground/10 hover:text-foreground'
                         )}
                         aria-label={isFavourite(photo.id) ? 'Unsave photo' : 'Save photo'}
                       >
@@ -121,7 +121,7 @@ export function PersonPhotoGrid({
                       </button>
                       <button
                         onClick={() => onAddToAlbum(photo.id)}
-                        className="flex h-9 w-9 items-center justify-center rounded-full bg-white/6 text-white/72 transition-colors hover:bg-white/10 hover:text-white"
+                        className="flex h-9 w-9 items-center justify-center rounded-full bg-foreground/6 text-foreground/72 transition-colors hover:bg-foreground/10 hover:text-foreground"
                         aria-label="Add photo to album"
                       >
                         <Plus className="h-4 w-4" />

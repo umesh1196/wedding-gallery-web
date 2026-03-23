@@ -29,10 +29,10 @@ export function SelectedPersonHero({
     <section className="wrap mb-6 md:mb-8">
       <div className="soft-panel overflow-hidden rounded-[1.85rem]">
         <div className="grid gap-0 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-          <div className="border-b border-white/6 p-5 md:p-7 lg:border-r lg:border-b-0">
+          <div className="border-b border-foreground/6 p-5 md:p-7 lg:border-r lg:border-b-0">
             <div className="flex items-center gap-4">
               <div className="relative h-16 w-16 rounded-full p-[3px] md:h-20 md:w-20 bg-[linear-gradient(180deg,rgba(201,80,106,0.95),rgba(201,80,106,0.35))]">
-                <div className="h-full w-full overflow-hidden rounded-full border border-white/10">
+                <div className="h-full w-full overflow-hidden rounded-full border border-foreground/10">
                   <img
                     alt={selectedPerson}
                     className="h-full w-full rounded-full object-cover"
@@ -44,8 +44,8 @@ export function SelectedPersonHero({
 
               <div>
                 <p className="label text-outline">Moments with</p>
-                <h3 className="font-headline text-3xl italic text-white md:text-4xl">{selectedPerson}</h3>
-                <p className="mt-1 label text-white/46">{photoCount} photo{photoCount !== 1 ? 's' : ''}</p>
+                <h3 className="font-headline text-3xl italic text-foreground md:text-4xl">{selectedPerson}</h3>
+                <p className="mt-1 label text-foreground/46">{photoCount} photo{photoCount !== 1 ? 's' : ''}</p>
               </div>
             </div>
           </div>
@@ -53,11 +53,11 @@ export function SelectedPersonHero({
           <div className="flex flex-col justify-between p-5 md:p-7">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <p className="label text-white/42">{isSelecting ? `${selectedCount} selected` : `${photoCount} photo${photoCount !== 1 ? 's' : ''}`}</p>
+                <p className="label text-foreground/42">{isSelecting ? `${selectedCount} selected` : `${photoCount} photo${photoCount !== 1 ? 's' : ''}`}</p>
               </div>
               <button
                 onClick={onBackToPeople}
-                className="rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 label text-white/72 transition-colors hover:bg-white/[0.05] hover:text-white"
+                className="rounded-full border border-foreground/10 bg-foreground/[0.03] px-4 py-2 label text-foreground/72 transition-colors hover:bg-foreground/[0.05] hover:text-foreground"
               >
                 Back to People
               </button>
@@ -68,13 +68,13 @@ export function SelectedPersonHero({
                 <>
                   <button
                     onClick={onToggleSelectAll}
-                    className="rounded-full bg-white/8 px-4 py-2.5 label text-white/88 transition-colors hover:bg-white/12"
+                    className="rounded-full bg-foreground/8 px-4 py-2.5 label text-foreground/88 transition-colors hover:bg-foreground/12"
                   >
                     {allSelected ? 'Deselect All' : 'Select All'}
                   </button>
                   <button
                     onClick={onSaveSelected}
-                    className="rounded-full bg-white/8 px-4 py-2.5 label text-white/88 transition-colors hover:bg-white/12"
+                    className="rounded-full bg-foreground/8 px-4 py-2.5 label text-foreground/88 transition-colors hover:bg-foreground/12"
                   >
                     Save Selected
                   </button>
@@ -89,7 +89,7 @@ export function SelectedPersonHero({
                 <>
                   <button
                     onClick={onSaveAll}
-                    className="rounded-full bg-white/8 px-4 py-2.5 label text-white/88 transition-colors hover:bg-white/12"
+                    className="rounded-full bg-foreground/8 px-4 py-2.5 label text-foreground/88 transition-colors hover:bg-foreground/12"
                   >
                     Save All
                   </button>

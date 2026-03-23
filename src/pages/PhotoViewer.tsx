@@ -246,7 +246,7 @@ export default function PhotoViewer() {
                   goToPrevPhoto();
                 }}
                 title="Previous (←)"
-                className="absolute left-4 top-1/2 z-20 hidden h-16 w-10 -translate-y-1/2 items-center justify-center text-white/28 transition-colors hover:text-white md:flex"
+                className="absolute left-4 top-1/2 z-20 hidden h-16 w-10 -translate-y-1/2 items-center justify-center text-foreground/28 transition-colors hover:text-foreground md:flex"
               >
                 <span className="select-none text-5xl leading-none">‹</span>
               </motion.button>
@@ -263,7 +263,7 @@ export default function PhotoViewer() {
                   goToNextPhoto();
                 }}
                 title="Next (→)"
-                className="absolute right-4 top-1/2 z-20 hidden h-16 w-10 -translate-y-1/2 items-center justify-center text-white/28 transition-colors hover:text-white md:flex"
+                className="absolute right-4 top-1/2 z-20 hidden h-16 w-10 -translate-y-1/2 items-center justify-center text-foreground/28 transition-colors hover:text-foreground md:flex"
               >
                 <span className="select-none text-5xl leading-none">›</span>
               </motion.button>
@@ -276,11 +276,11 @@ export default function PhotoViewer() {
               className="mobile-safe-bottom pointer-events-none fixed inset-x-0 bottom-0 z-40 px-3 pb-2 md:px-8 md:pb-5"
             >
               <div className="mx-auto max-w-3xl">
-                <div className="rounded-[1.25rem] border border-white/6 bg-gradient-to-t from-black/58 via-black/22 to-transparent px-4 pt-8 pb-2 backdrop-blur-[10px] md:px-5 md:pt-10">
+                <div className="rounded-[1.25rem] border border-foreground/6 bg-gradient-to-t from-black/58 via-black/22 to-transparent px-4 pt-8 pb-2 backdrop-blur-[10px] md:px-5 md:pt-10">
                   <div className="pointer-events-auto flex items-end justify-between gap-4">
                     <div className="min-w-0">
-                      <p className="label text-white/50">{currentIndex + 1} of {eventPhotos.length}</p>
-                      <p className="mt-0.5 truncate font-body text-sm text-white/82 md:text-[15px]">
+                      <p className="label text-foreground/50">{currentIndex + 1} of {eventPhotos.length}</p>
+                      <p className="mt-0.5 truncate font-body text-sm text-foreground/82 md:text-[15px]">
                         {caption}
                       </p>
                     </div>
@@ -326,7 +326,7 @@ export default function PhotoViewer() {
                       {photo.people.map((person) => (
                         <div
                           key={person}
-                          className="flex flex-shrink-0 items-center gap-2 rounded-full bg-white/9 px-2.5 py-1 backdrop-blur-sm"
+                          className="flex flex-shrink-0 items-center gap-2 rounded-full bg-foreground/9 px-2.5 py-1 backdrop-blur-sm"
                         >
                           <div className="h-[22px] w-[22px] overflow-hidden rounded-full">
                             <img
@@ -336,7 +336,7 @@ export default function PhotoViewer() {
                               referrerPolicy="no-referrer"
                             />
                           </div>
-                          <span className="font-body text-[11px] text-white/84">{person}</span>
+                          <span className="font-body text-[11px] text-foreground/84">{person}</span>
                         </div>
                       ))}
                     </div>

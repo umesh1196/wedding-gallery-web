@@ -46,7 +46,7 @@ export default function Home() {
         <section className="wrap">
           <div className="mb-5 md:mb-7">
             <p className="label text-outline">Your Collections</p>
-            <h2 className="mt-2 font-headline text-[2.15rem] font-light text-white md:text-4xl">
+            <h2 className="mt-2 font-headline text-[2.15rem] font-light text-foreground md:text-4xl">
               {isEarlyGallery ? 'Your collection starts here' : 'Keep the moments you want close'}
             </h2>
           </div>
@@ -80,17 +80,17 @@ export default function Home() {
                 <Heart className="h-4 w-4 fill-current text-rose-accent" />
               </div>
               <div>
-                <p className="label text-white/60">Saving photos</p>
-                <p className="mt-1 font-body text-sm text-white/70">Tap ♡ on any photo. Private to you.</p>
+                <p className="label text-foreground/60">Saving photos</p>
+                <p className="mt-1 font-body text-sm text-foreground/70">Tap ♡ on any photo. Private to you.</p>
               </div>
             </div>
             <div className="soft-panel rounded-[1.45rem] p-4 md:p-5 flex items-center gap-3">
-              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white/6">
-                <Folder className="h-4 w-4 text-white/80" />
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-foreground/6">
+                <Folder className="h-4 w-4 text-foreground/80" />
               </div>
               <div>
-                <p className="label text-white/60">Albums for sharing</p>
-                <p className="mt-1 font-body text-sm text-white/70">Select photos → album → one link.</p>
+                <p className="label text-foreground/60">Albums for sharing</p>
+                <p className="mt-1 font-body text-sm text-foreground/70">Select photos → album → one link.</p>
               </div>
             </div>
           </div>
@@ -99,11 +99,11 @@ export default function Home() {
         <section className="wrap">
           <Link
             to="/events"
-            className="group flex items-center justify-between rounded-[1.7rem] border border-white/8 bg-white/[0.025] px-6 py-5 transition-colors hover:border-white/14 hover:bg-white/[0.04] md:px-8 md:py-6"
+            className="group flex items-center justify-between rounded-[1.7rem] border border-foreground/8 bg-foreground/[0.025] px-6 py-5 transition-colors hover:border-foreground/14 hover:bg-foreground/[0.04] md:px-8 md:py-6"
           >
             <div>
-              <p className="label text-outline">5 wedding chapters · Dec '25 – Feb '26</p>
-              <h3 className="mt-1.5 font-headline text-[1.8rem] italic font-light text-white leading-none md:text-[2.2rem]">
+              <p className="label text-outline">5 chapters · Dec '25 – Feb '26</p>
+              <h3 className="mt-1.5 font-headline text-[1.8rem] italic font-light text-foreground leading-none md:text-[2.2rem]">
                 The Haldi. The vows. The dance floor at midnight.
               </h3>
             </div>

@@ -59,7 +59,7 @@ export default function AlbumDetail() {
           >
             <ArrowLeft className="w-4 h-4" /> {backLabel}
           </Link>
-          <h2 className="font-headline text-[2.5rem] md:text-5xl lg:text-6xl font-light text-white">{album.title}</h2>
+          <h2 className="font-headline text-[2.5rem] md:text-5xl lg:text-6xl font-light text-foreground">{album.title}</h2>
           <p className="label text-outline mt-2">{albumPhotos.length} photos</p>
           {userAlbum && (
             <p className="label text-outline/80 mt-2">Removing a photo here only takes it out of this collection.</p>
@@ -101,7 +101,7 @@ export default function AlbumDetail() {
                     });
                   }
                 }}
-                className="absolute right-2 top-2 z-20 inline-flex items-center gap-1.5 rounded-full border border-white/12 bg-black/60 px-3 py-2 text-rose-accent shadow-lg backdrop-blur-xl transition-colors hover:bg-black/72"
+                className="absolute right-2 top-2 z-20 inline-flex items-center gap-1.5 rounded-full border border-foreground/12 bg-black/60 px-3 py-2 text-rose-accent shadow-lg backdrop-blur-xl transition-colors hover:bg-black/72"
                 aria-label={`Remove ${photo.alt} from album`}
               >
                 <Trash2 className="h-4 w-4" />
@@ -122,7 +122,7 @@ export default function AlbumDetail() {
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
-                    className="absolute top-2 right-2 z-[70] bg-surface/95 backdrop-blur-xl border border-white/10 rounded-lg overflow-hidden shadow-xl"
+                    className="absolute top-2 right-2 z-[70] bg-surface/95 backdrop-blur-xl border border-foreground/10 rounded-lg overflow-hidden shadow-xl"
                   >
                     <button
                       onClick={() => {
@@ -152,12 +152,12 @@ export default function AlbumDetail() {
         <div className="overflow-y-auto px-6 pt-6 pb-4 md:px-8 md:pt-8">
           <div className="mb-5 flex items-start justify-between gap-4">
             <div>
-              <h3 className="font-headline text-2xl md:text-3xl text-white font-light mb-1">{album.title}</h3>
+              <h3 className="font-headline text-2xl md:text-3xl text-foreground font-light mb-1">{album.title}</h3>
               <p className="label text-outline">{albumPhotos.length} photos to share · Shruti &amp; Umesh</p>
             </div>
             <button
               onClick={() => setShowShareSheet(false)}
-              className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full transition-colors hover:bg-white/5"
+              className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full transition-colors hover:bg-foreground/5"
               aria-label="Close"
             >
               <X className="h-5 w-5 text-outline" />
@@ -176,14 +176,14 @@ export default function AlbumDetail() {
               />
             ))}
             {albumPhotos.length > 5 && (
-              <div className="w-12 h-12 md:w-14 md:h-14 bg-white/5 flex-shrink-0 flex items-center justify-center rounded">
+              <div className="w-12 h-12 md:w-14 md:h-14 bg-foreground/5 flex-shrink-0 flex items-center justify-center rounded">
                 <span className="label text-outline">+{albumPhotos.length - 5}</span>
               </div>
             )}
           </div>
 
           {/* Link display */}
-          <div className="flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-3 mb-4 rounded">
+          <div className="flex items-center gap-3 bg-foreground/5 border border-foreground/10 px-4 py-3 mb-4 rounded">
             <span className="flex-1 font-mono text-[11px] text-outline truncate">
               gallery.app/share?ids={album.photoIds.slice(0, 3).join(',')}...
             </span>

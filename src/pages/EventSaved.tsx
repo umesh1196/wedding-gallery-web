@@ -21,14 +21,14 @@ export default function EventSaved() {
       {/* Page header */}
       <section className="wrap page-header">
         <p className="label text-outline mb-1">{event?.title || 'Event'}</p>
-        <h2 className="font-headline text-[2.5rem] md:text-5xl lg:text-6xl font-light text-white leading-tight">Saved</h2>
+        <h2 className="font-headline text-[2.5rem] md:text-5xl lg:text-6xl font-light text-foreground leading-tight">Saved</h2>
         <p className="label text-outline mt-1">{savedPhotos.length} saved photo{savedPhotos.length !== 1 ? 's' : ''}</p>
       </section>
 
       {savedPhotos.length === 0 ? (
         <div className="wrap flex flex-col items-center justify-center py-20 text-center">
           <Heart className="w-12 h-12 text-rose-accent/20 fill-current mb-6" />
-          <h3 className="font-headline text-xl md:text-2xl italic font-light text-white mb-2">
+          <h3 className="font-headline text-xl md:text-2xl italic font-light text-foreground mb-2">
             No saved moments yet
           </h3>
           <p className="font-body text-sm text-outline leading-relaxed max-w-[240px] mb-8">

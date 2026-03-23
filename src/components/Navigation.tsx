@@ -2,6 +2,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { Heart, Image as ImageIcon, Users, Folder, CalendarDays } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { getEventNavConfig, readRouteState } from '../lib/navigation';
+import { ThemeToggle } from './ThemeToggle';
 
 /**
  * HomeNav — fixed top bar for home-level pages (/, /events, /saved).
@@ -10,14 +11,14 @@ import { getEventNavConfig, readRouteState } from '../lib/navigation';
 export function HomeNav() {
   const items = [
     { icon: ImageIcon,    label: 'Memories', path: '/' },
-    { icon: CalendarDays, label: 'Events',  path: '/events' },
+    { icon: CalendarDays, label: 'Chapters', path: '/events' },
     { icon: Folder,       label: 'Albums',  path: '/albums' },
     { icon: Heart,        label: 'Saved',   path: '/saved' },
   ];
 
   return (
     <>
-      <header className="hidden md:flex sticky top-0 z-50 h-14 md:h-16 items-center bg-background/80 backdrop-blur-xl border-b border-white/5">
+      <header className="hidden md:flex sticky top-0 z-50 h-14 md:h-16 items-center bg-background/80 backdrop-blur-xl border-b border-foreground/5">
         {/* Left: brand */}
         <div className="flex-1 flex items-center pl-4 md:pl-8 lg:pl-12">
           <span className="label text-outline whitespace-nowrap">MPPF Photography</span>
@@ -33,7 +34,7 @@ export function HomeNav() {
               className={({ isActive }) =>
                 cn(
                   'flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all duration-200 label',
-                  isActive ? 'text-rose-accent' : 'text-white/40 hover:text-white/70'
+                  isActive ? 'text-rose-accent' : 'text-foreground/40 hover:text-foreground/70'
                 )
               }
             >
@@ -48,13 +49,15 @@ export function HomeNav() {
           ))}
         </nav>
 
-        {/* Right: spacer for balance */}
-        <div className="flex-1" />
+        {/* Right: theme toggle */}
+        <div className="flex-1 flex items-center justify-end pr-4 md:pr-8 lg:pr-12">
+          <ThemeToggle />
+        </div>
       </header>
 
       <nav className="md:hidden fixed inset-x-3 bottom-3 z-50 pb-[max(0.25rem,env(safe-area-inset-bottom))]">
-        <div className="rounded-[1.75rem] border border-white/10 bg-surface-container/92 px-2 py-2 shadow-[0_-12px_40px_rgba(0,0,0,0.28)] backdrop-blur-2xl">
-          <div className="grid grid-cols-4 gap-1">
+        <div className="rounded-[1.75rem] border border-foreground/10 bg-surface-container/92 px-2 py-2 shadow-[0_-12px_40px_rgba(0,0,0,0.28)] backdrop-blur-2xl">
+          <div className="grid grid-cols-5 gap-1">
             {items.map((item) => (
               <NavLink
                 key={item.path}
@@ -63,7 +66,7 @@ export function HomeNav() {
                 className={({ isActive }) =>
                   cn(
                     'flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl px-2 transition-all duration-200',
-                    isActive ? 'bg-rose-accent/14 text-rose-accent' : 'text-white/50 active:text-white'
+                    isActive ? 'bg-rose-accent/14 text-rose-accent' : 'text-foreground/50 active:text-foreground'
                   )
                 }
               >
@@ -76,6 +79,9 @@ export function HomeNav() {
                 <span className="label leading-none">{item.label}</span>
               </NavLink>
             ))}
+            <div className="flex min-h-14 flex-col items-center justify-center rounded-2xl">
+              <ThemeToggle />
+            </div>
           </div>
         </div>
       </nav>
@@ -105,7 +111,7 @@ export function EventNav({ eventId }: { eventId: string }) {
   ];
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 h-14 md:h-16 flex items-center bg-background/80 backdrop-blur-xl border-b border-white/5">
+    <header className="fixed top-0 left-0 right-0 z-50 h-14 md:h-16 flex items-center bg-background/80 backdrop-blur-xl border-b border-foreground/5">
       {/* Left: back link */}
       <div className="flex-1 flex items-center pl-4 md:pl-8 lg:pl-12">
         <NavLink
@@ -128,7 +134,7 @@ export function EventNav({ eventId }: { eventId: string }) {
             className={({ isActive }) =>
               cn(
                 'flex items-center gap-1.5 px-2.5 md:px-3 py-2 rounded-lg transition-all duration-200 label',
-                isActive ? 'text-rose-accent' : 'text-white/40 hover:text-white/70'
+                isActive ? 'text-rose-accent' : 'text-foreground/40 hover:text-foreground/70'
               )
             }
           >
@@ -147,8 +153,10 @@ export function EventNav({ eventId }: { eventId: string }) {
         ))}
       </nav>
 
-      {/* Right: spacer */}
-      <div className="flex-1" />
+      {/* Right: theme toggle */}
+      <div className="flex-1 flex items-center justify-end pr-4 md:pr-8 lg:pr-12">
+        <ThemeToggle />
+      </div>
     </header>
   );
 }

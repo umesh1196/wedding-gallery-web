@@ -24,15 +24,15 @@ export function CollectionEntryCard({
   return (
     <Link
       to={href}
-      className="soft-panel group flex min-h-[12.5rem] flex-col justify-between rounded-[1.7rem] p-5 transition-colors hover:border-white/10 md:min-h-[14rem] md:p-6"
+      className="soft-panel group flex min-h-[12.5rem] flex-col justify-between rounded-[1.7rem] p-5 transition-colors hover:border-foreground/10 md:min-h-[14rem] md:p-6"
     >
-      <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white/6 text-rose-accent">
+      <div className="flex h-11 w-11 items-center justify-center rounded-full bg-foreground/6 text-rose-accent">
         <Icon className={cn('h-5 w-5', icon === 'saved' && 'fill-current')} />
       </div>
       <div>
-        <p className="label text-white/42">{countLabel}</p>
-        <h3 className="mt-2 font-headline text-[1.9rem] italic leading-none text-white">{title}</h3>
-        <p className="mt-3 max-w-sm font-body text-sm leading-relaxed text-white/62">{description}</p>
+        <p className="label text-foreground/42">{countLabel}</p>
+        <h3 className="mt-2 font-headline text-[1.9rem] italic leading-none text-foreground">{title}</h3>
+        <p className="mt-3 max-w-sm font-body text-sm leading-relaxed text-foreground/62">{description}</p>
         <p className="mt-4 label text-rose-accent">{ctaLabel}</p>
       </div>
     </Link>

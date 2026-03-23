@@ -30,13 +30,13 @@ export default function Albums() {
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1.3fr)_minmax(18rem,0.7fr)] lg:items-end">
           <div>
             <p className="label mb-1 text-outline">Curated collections</p>
-            <h2 className="font-headline text-[36px] font-light leading-tight text-white md:text-5xl lg:text-6xl">
+            <h2 className="font-headline text-[36px] font-light leading-tight text-foreground md:text-5xl lg:text-6xl">
               Albums
             </h2>
-            <p className="mt-2 max-w-xl font-body text-sm leading-relaxed text-white/62 md:text-base">
+            <p className="mt-2 max-w-xl font-body text-sm leading-relaxed text-foreground/62 md:text-base">
               Revisit the wedding as a set of thoughtful keepsakes, from studio-curated collections to the albums you build around your own favourite moments.
             </p>
-            <p className="mt-3 max-w-xl font-body text-sm leading-relaxed text-white/46 md:text-[15px]">
+            <p className="mt-3 max-w-xl font-body text-sm leading-relaxed text-foreground/46 md:text-[15px]">
               Studio albums are prepared for everyone to enjoy. Personal albums are only for the moments you decide to gather yourself.
             </p>
           </div>
@@ -44,22 +44,22 @@ export default function Albums() {
           <div className="soft-panel rounded-[1.7rem] p-4 md:p-5">
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               <div>
-                <p className="label text-white/40">All Collections</p>
-                <p className="mt-2 font-headline text-[1.75rem] leading-none text-white md:text-[2rem]">
+                <p className="label text-foreground/40">All Collections</p>
+                <p className="mt-2 font-headline text-[1.75rem] leading-none text-foreground md:text-[2rem]">
                   {totalAlbums}
                 </p>
               </div>
               <div>
-                <p className="label text-white/40">Studio</p>
-                <p className="mt-2 font-body text-lg text-white/82">{totalStudioAlbums}</p>
+                <p className="label text-foreground/40">Studio</p>
+                <p className="mt-2 font-body text-lg text-foreground/82">{totalStudioAlbums}</p>
               </div>
               <div>
-                <p className="label text-white/40">Yours</p>
-                <p className="mt-2 font-body text-lg text-white/82">{totalPersonalAlbums}</p>
+                <p className="label text-foreground/40">Yours</p>
+                <p className="mt-2 font-body text-lg text-foreground/82">{totalPersonalAlbums}</p>
               </div>
             </div>
             {totalAlbums > 0 && (
-              <p className="mt-4 font-body text-sm leading-relaxed text-white/58">
+              <p className="mt-4 font-body text-sm leading-relaxed text-foreground/58">
                 Spread across {byEvent.length} wedding chapter{byEvent.length !== 1 ? 's' : ''}.
               </p>
             )}
@@ -70,13 +70,13 @@ export default function Albums() {
       {byEvent.length === 0 ? (
         <div className="wrap flex flex-col items-center py-24 text-center">
           <Folder className="mb-6 h-12 w-12 text-rose-accent/20" />
-          <h3 className="mb-2 font-headline text-xl italic font-light text-white md:text-2xl">
+          <h3 className="mb-2 font-headline text-xl italic font-light text-foreground md:text-2xl">
             No albums yet
           </h3>
           <p className="max-w-[260px] font-body text-sm leading-relaxed text-outline">
             Create your own collections from any chapter and they will gather here.
           </p>
-          <p className="mt-3 max-w-[280px] font-body text-sm leading-relaxed text-white/46">
+          <p className="mt-3 max-w-[280px] font-body text-sm leading-relaxed text-foreground/46">
             This is a simple way to keep family portraits, favourite candid moments, or any small set of photos together in one place.
           </p>
         </div>
@@ -85,13 +85,13 @@ export default function Albums() {
           {byEvent.map(({ event, albums, studioAlbums, personalAlbums }) => (
             <section
               key={event.id}
-              className="soft-panel overflow-hidden rounded-[1.9rem] border border-white/6"
+              className="soft-panel overflow-hidden rounded-[1.9rem] border border-foreground/6"
             >
               <div className="grid gap-0 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
                 <Link
                   to={`/event/${event.id}/albums`}
                   state={{ backTo: '/albums', backLabel: 'Albums' }}
-                  className="group relative block min-h-[220px] overflow-hidden border-b border-white/6 lg:min-h-[360px] lg:border-r lg:border-b-0"
+                  className="group relative block min-h-[220px] overflow-hidden border-b border-foreground/6 lg:min-h-[360px] lg:border-r lg:border-b-0"
                 >
                   <img
                     className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
@@ -112,24 +112,24 @@ export default function Albums() {
                 </Link>
 
                 <div className="flex flex-col p-4 md:p-6">
-                  <div className="flex flex-wrap items-start justify-between gap-3 border-b border-white/6 pb-4 md:pb-5">
+                  <div className="flex flex-wrap items-start justify-between gap-3 border-b border-foreground/6 pb-4 md:pb-5">
                     <div>
                       <p className="label text-outline">This Chapter</p>
-                      <p className="mt-2 font-body text-sm leading-relaxed text-white/70">
+                      <p className="mt-2 font-body text-sm leading-relaxed text-foreground/70">
                         {albums.length} collection{albums.length !== 1 ? 's' : ''} ready to revisit.
                       </p>
-                      <p className="mt-2 max-w-sm font-body text-xs leading-relaxed text-white/46 md:text-sm">
+                      <p className="mt-2 max-w-sm font-body text-xs leading-relaxed text-foreground/46 md:text-sm">
                         Open the chapter to browse the studio's curated collections or any personal albums you have created for your family.
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      <span className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-white/[0.02] px-3 py-2">
+                      <span className="inline-flex items-center gap-2 rounded-full border border-foreground/8 bg-foreground/[0.02] px-3 py-2">
                         <Sparkles className="h-3.5 w-3.5 text-rose-accent" />
-                        <span className="label text-white/62">{studioAlbums.length} studio</span>
+                        <span className="label text-foreground/62">{studioAlbums.length} studio</span>
                       </span>
-                      <span className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-white/[0.02] px-3 py-2">
-                        <FolderOpen className="h-3.5 w-3.5 text-white/70" />
-                        <span className="label text-white/62">{personalAlbums.length} personal</span>
+                      <span className="inline-flex items-center gap-2 rounded-full border border-foreground/8 bg-foreground/[0.02] px-3 py-2">
+                        <FolderOpen className="h-3.5 w-3.5 text-foreground/70" />
+                        <span className="label text-foreground/62">{personalAlbums.length} personal</span>
                       </span>
                     </div>
                   </div>
@@ -140,7 +140,7 @@ export default function Albums() {
                         key={album.id}
                         to={`/event/${event.id}/albums/${album.id}`}
                         state={{ backTo: '/albums', backLabel: 'Albums' }}
-                        className="group relative block aspect-[0.9] overflow-hidden rounded-[1.5rem] border border-white/5"
+                        className="group relative block aspect-[0.9] overflow-hidden rounded-[1.5rem] border border-foreground/5"
                       >
                         {'coverUrl' in album && album.coverUrl ? (
                           <img
@@ -156,13 +156,13 @@ export default function Albums() {
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/84 via-transparent to-transparent" />
                         <div className="absolute inset-x-0 bottom-0 p-4">
-                          <p className="label text-white/46">
+                          <p className="label text-foreground/46">
                             {'createdAt' in album ? 'Yours' : 'Studio'}
                           </p>
-                          <p className="mt-2 font-headline text-lg leading-tight text-white md:text-xl">
+                          <p className="mt-2 font-headline text-lg leading-tight text-foreground md:text-xl">
                             {album.title}
                           </p>
-                          <p className="mt-1 label text-white/62">{album.photoIds.length} photos</p>
+                          <p className="mt-1 label text-foreground/62">{album.photoIds.length} photos</p>
                         </div>
                       </Link>
                     ))}

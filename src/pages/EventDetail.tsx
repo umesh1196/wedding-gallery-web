@@ -90,7 +90,7 @@ export default function EventDetail() {
         />
 
           <div className="wrap pt-4 pb-2">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-black/12 px-3 py-2 text-white/72 backdrop-blur-sm">
+            <div className="inline-flex items-center gap-2 rounded-full border border-foreground/8 bg-black/12 px-3 py-2 text-foreground/72 backdrop-blur-sm">
               <Link2 className="h-4 w-4 text-rose-accent" />
               <span className="label">{eventPhotos.length} moments · {editorial?.moodLabel ?? 'Quietly curated'}</span>
             </div>

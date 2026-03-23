@@ -29,13 +29,13 @@ export function EventHero({ event, heroPhoto }: EventHeroProps) {
               <p className="mt-3 max-w-xl font-body text-sm leading-relaxed text-white/82 md:text-base">
                 {editorial.subtitle}
               </p>
-              <div className="mt-4 inline-flex rounded-full border border-white/10 bg-black/18 px-3 py-2 backdrop-blur-sm">
+              <div className="mt-4 inline-flex rounded-full border border-foreground/10 bg-black/18 px-3 py-2 backdrop-blur-sm">
                 <span className="label text-white/74">{editorial.moodLabel}</span>
               </div>
             </div>
 
             <div className="flex lg:justify-end">
-              <div className="label inline-flex min-h-11 w-full items-center justify-center rounded-full border border-white/10 bg-black/18 px-4 text-white/50 backdrop-blur-sm lg:w-auto lg:min-w-[14rem]">
+              <div className="label inline-flex min-h-11 w-full items-center justify-center rounded-full border border-foreground/10 bg-black/18 px-4 text-foreground/50 backdrop-blur-sm lg:w-auto lg:min-w-[14rem]">
                 Hold any photo to select
               </div>
             </div>

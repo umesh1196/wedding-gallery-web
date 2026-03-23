@@ -24,10 +24,10 @@ export function PeopleStrip({
       <div className="mb-4 flex items-end justify-between gap-3 md:mb-6">
         <div>
           <p className="label text-outline">Browse by familiar faces</p>
-          <p className="mt-2 max-w-lg font-body text-sm leading-relaxed text-white/60">
+          <p className="mt-2 max-w-lg font-body text-sm leading-relaxed text-foreground/60">
             Pick a face to bring together portraits, candid frames, and the quieter in-between moments they appear in.
           </p>
-          <p className="mt-2 max-w-lg font-body text-xs leading-relaxed text-white/46 md:text-sm">
+          <p className="mt-2 max-w-lg font-body text-xs leading-relaxed text-foreground/46 md:text-sm">
             Tap any face to see their photos together. If you do not see yourself yet, use the `Find Yourself` option to start there.
           </p>
         </div>
@@ -48,10 +48,10 @@ export function PeopleStrip({
                   'relative h-16 w-16 rounded-full p-[3px] transition-all duration-200 md:h-20 md:w-20',
                   isSelected
                     ? 'bg-[linear-gradient(180deg,rgba(201,80,106,0.95),rgba(201,80,106,0.35))]'
-                    : 'bg-white/[0.04]'
+                    : 'bg-foreground/[0.04]'
                 )}
               >
-                <div className="h-full w-full overflow-hidden rounded-full border border-white/8 bg-[#151515]">
+                <div className="h-full w-full overflow-hidden rounded-full border border-foreground/8 bg-[#151515]">
                   <img
                     alt={name}
                     className="h-full w-full rounded-full object-cover"
@@ -60,7 +60,7 @@ export function PeopleStrip({
                   />
                 </div>
                 <div className="absolute -bottom-1 -right-1 rounded-full border border-surface bg-black/78 px-1.5 py-0.5 backdrop-blur-sm">
-                  <span className={cn('text-[8px] font-label font-bold tracking-[0.18em]', isSelected ? 'text-rose-accent' : 'text-white/68')}>
+                  <span className={cn('text-[8px] font-label font-bold tracking-[0.18em]', isSelected ? 'text-rose-accent' : 'text-foreground/68')}>
                     {count}
                   </span>
                 </div>

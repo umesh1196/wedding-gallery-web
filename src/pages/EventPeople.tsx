@@ -99,7 +99,7 @@ export default function EventPeople() {
     >
       <section className="wrap page-header">
         <p className="mb-1 label text-outline">{event?.title || 'Event'}</p>
-        <h2 className="font-headline text-[2.5rem] font-light text-white md:text-5xl lg:text-6xl">People</h2>
+        <h2 className="font-headline text-[2.5rem] font-light text-foreground md:text-5xl lg:text-6xl">People</h2>
       </section>
 
       <PeopleStrip
@@ -190,13 +190,13 @@ export default function EventPeople() {
           <div className="mb-5 flex items-center justify-between">
             <div>
               <p className="label text-outline">Find Your Photos</p>
-              <h2 className="mt-1 font-headline text-2xl font-light text-white md:text-3xl">
+              <h2 className="mt-1 font-headline text-2xl font-light text-foreground md:text-3xl">
                 Add a selfie
               </h2>
             </div>
             <button
               onClick={() => setShowFindSheet(false)}
-              className="flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-white/5"
+              className="flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-foreground/5"
             >
               <X className="h-5 w-5 text-outline" />
             </button>
@@ -211,7 +211,7 @@ export default function EventPeople() {
               <Camera className="h-4 w-4" />
               Open Camera
             </button>
-            <button className="flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-white/88 label transition-colors hover:bg-white/8">
+            <button className="flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-foreground/10 bg-foreground/5 px-5 py-3 text-foreground/88 label transition-colors hover:bg-foreground/8">
               <Upload className="h-4 w-4" />
               Upload from Library
             </button>

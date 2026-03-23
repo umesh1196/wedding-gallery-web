@@ -23,8 +23,8 @@ export default function Saved() {
       {/* Page header */}
       <section className="wrap page-header">
         <p className="label text-outline mb-1">Collected moments</p>
-        <h2 className="font-headline text-[36px] md:text-5xl lg:text-6xl font-light text-white leading-tight">Saved</h2>
-        <p className="mt-2 font-body text-sm text-white/60">
+        <h2 className="font-headline text-[36px] md:text-5xl lg:text-6xl font-light text-foreground leading-tight">Saved</h2>
+        <p className="mt-2 font-body text-sm text-foreground/60">
           Your personal collection — private to you.
         </p>
         {savedPhotos.length > 0 && (
@@ -37,7 +37,7 @@ export default function Saved() {
       {byEvent.length === 0 ? (
         <div className="wrap flex flex-col items-center py-24 text-center">
           <Heart className="w-12 h-12 text-rose-accent/20 fill-current mb-6" />
-          <h3 className="font-headline text-xl md:text-2xl italic font-light text-white mb-2">
+          <h3 className="font-headline text-xl md:text-2xl italic font-light text-foreground mb-2">
             Your saved moments will appear here
           </h3>
           <p className="font-body text-sm text-outline leading-relaxed max-w-[240px]">
@@ -63,7 +63,7 @@ export default function Saved() {
                 <div className="absolute inset-0 bg-black/50" />
                 <div className="absolute inset-0 flex items-center justify-between px-5 md:px-8">
                   <div>
-                    <h4 className="font-headline italic text-2xl md:text-3xl lg:text-4xl text-white">{event.title}</h4>
+                    <h4 className="font-headline italic text-2xl md:text-3xl lg:text-4xl text-foreground">{event.title}</h4>
                   </div>
                   <div className="flex items-center gap-1.5 text-rose-accent">
                     <Heart className="w-3.5 h-3.5 fill-current" />
@@ -95,7 +95,7 @@ export default function Saved() {
                 <Link
                   to={`/event/${event.id}/saved`}
                   state={{ backTo: '/saved', backLabel: 'Saved' }}
-                  className="block mt-2 label text-outline text-right hover:text-white transition-colors"
+                  className="block mt-2 label text-outline text-right hover:text-foreground transition-colors"
                 >
                   View the rest →
                 </Link>

@@ -53,11 +53,11 @@ export function Sheet({ open, onClose, children }: SheetProps) {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 32, opacity: 0 }}
               transition={{ duration: 0.24, ease: 'easeOut' }}
-              className="w-full max-w-none md:max-w-lg bg-surface border border-white/5 shadow-2xl flex max-h-[88vh] md:max-h-[85vh] flex-col overflow-hidden rounded-t-[1.75rem] md:rounded-2xl mobile-safe-bottom md:mobile-safe-bottom"
+              className="w-full max-w-none md:max-w-lg bg-surface border border-foreground/5 shadow-2xl flex max-h-[88vh] md:max-h-[85vh] flex-col overflow-hidden rounded-t-[1.75rem] md:rounded-2xl mobile-safe-bottom md:mobile-safe-bottom"
               onClick={(event) => event.stopPropagation()}
             >
               <div className="flex justify-center pt-3 pb-2 md:hidden">
-                <div className="h-1.5 w-12 rounded-full bg-white/15" />
+                <div className="h-1.5 w-12 rounded-full bg-foreground/15" />
               </div>
               {children}
             </motion.div>

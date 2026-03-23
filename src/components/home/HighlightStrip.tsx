@@ -11,7 +11,7 @@ export function HighlightStrip({ photos }: HighlightStripProps) {
       <div className="mb-5 flex items-end justify-between gap-4 md:mb-7">
         <div>
           <p className="label text-outline">Featured Moments</p>
-          <h2 className="mt-2 font-headline text-[2.1rem] font-light text-white md:text-4xl">
+          <h2 className="mt-2 font-headline text-[2.1rem] font-light text-foreground md:text-4xl">
             A few frames that set the tone
           </h2>
         </div>
@@ -33,8 +33,8 @@ export function HighlightStrip({ photos }: HighlightStripProps) {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/86 via-black/14 to-transparent" />
             <div className="absolute inset-x-0 bottom-0 p-5 md:p-6">
-              <p className="label text-white/50">{photo.date}</p>
-              <p className="mt-2 max-w-lg font-headline text-[1.7rem] italic leading-tight text-white md:text-[2.3rem]">
+              <p className="label text-foreground/50">{photo.date}</p>
+              <p className="mt-2 max-w-lg font-headline text-[1.7rem] italic leading-tight text-foreground md:text-[2.3rem]">
                 {photo.alt}
               </p>
             </div>
@@ -57,8 +57,8 @@ export function HighlightStrip({ photos }: HighlightStripProps) {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/82 via-black/10 to-transparent" />
               <div className="absolute inset-x-0 bottom-0 p-4 md:p-5">
-                <p className="label text-white/46">{photo.date}</p>
-                <p className="mt-2 font-body text-sm leading-relaxed text-white/88 md:text-[15px]">
+                <p className="label text-foreground/46">{photo.date}</p>
+                <p className="mt-2 font-body text-sm leading-relaxed text-foreground/88 md:text-[15px]">
                   {photo.alt}
                 </p>
               </div>

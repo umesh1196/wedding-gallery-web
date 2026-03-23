@@ -22,19 +22,19 @@ export function ViewerDetails({
           exit={{ opacity: 0, height: 0 }}
           className="pointer-events-auto overflow-hidden"
         >
-          <div className="mt-2.5 border-t border-white/10 pt-3">
+          <div className="mt-2.5 border-t border-foreground/10 pt-3">
             <div className="grid grid-cols-2 gap-3 text-left md:grid-cols-3">
               <div>
-                <p className="label text-white/35">Event</p>
-                <p className="mt-1 font-body text-sm text-white/82">{eventName}</p>
+                <p className="label text-foreground/35">Event</p>
+                <p className="mt-1 font-body text-sm text-foreground/82">{eventName}</p>
               </div>
               <div>
-                <p className="label text-white/35">Date</p>
-                <p className="mt-1 font-body text-sm text-white/82">{date}</p>
+                <p className="label text-foreground/35">Date</p>
+                <p className="mt-1 font-body text-sm text-foreground/82">{date}</p>
               </div>
               <div className="col-span-2 md:col-span-1">
-                <p className="label text-white/35">Tagged</p>
-                <p className="mt-1 font-body text-sm text-white/82">
+                <p className="label text-foreground/35">Tagged</p>
+                <p className="mt-1 font-body text-sm text-foreground/82">
                   {people?.join(', ') || 'No tags'}
                 </p>
               </div>
