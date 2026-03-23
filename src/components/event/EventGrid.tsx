@@ -55,13 +55,17 @@ export function EventGrid({
   };
 
   return (
-    <section className={cn('grid grid-cols-2 gap-[2px] md:grid-cols-4 md:gap-1 lg:grid-cols-5 xl:grid-cols-6', isSelecting && 'mt-2')}>
+    <section
+      className={cn(
+        'columns-2 gap-[3px] md:columns-3 lg:columns-4',
+        isSelecting && 'mt-2'
+      )}
+    >
       {photos.map((photo) => (
         <div
           key={photo.id}
-          // eslint-disable-next-line react/forbid-dom-props
           style={{ WebkitTouchCallout: 'none' } as React.CSSProperties}
-          className="relative col-span-1 aspect-square overflow-hidden select-none touch-manipulation"
+          className="relative mb-[3px] break-inside-avoid overflow-hidden select-none touch-manipulation"
           onPointerDown={(e) => handlePointerDown(e, photo.id)}
           onPointerMove={handlePointerMove}
           onPointerUp={cancelTimer}
@@ -74,12 +78,12 @@ export function EventGrid({
           onClick={() => isSelecting && onToggleSelect(photo.id)}
         >
           {isSelecting ? (
-            <div className="h-full w-full cursor-pointer">
+            <div className="relative cursor-pointer">
               <img
                 alt={photo.alt}
                 draggable={false}
                 className={cn(
-                  'h-full w-full object-cover transition-all duration-200 pointer-events-none',
+                  'block w-full h-auto transition-all duration-200 pointer-events-none',
                   selectedPhotoIds.includes(photo.id)
                     ? 'brightness-[0.88] saturate-[1.05]'
                     : 'brightness-[0.72] saturate-[0.88]'
@@ -98,7 +102,7 @@ export function EventGrid({
               <div className="absolute left-2 top-2">
                 {selectedPhotoIds.includes(photo.id) ? (
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#1a73e8] shadow-[0_0_0_2px_rgba(255,255,255,0.92)]">
-                    <Check className="h-3.5 w-3.5 text-white stroke-[3]" />
+                    <Check className="h-3.5 w-3.5 stroke-[3] text-white" />
                   </div>
                 ) : (
                   <div className="h-6 w-6 rounded-full border-2 border-white bg-black/18 shadow-[0_0_0_1px_rgba(0,0,0,0.18)]" />
@@ -109,7 +113,7 @@ export function EventGrid({
             <Link
               to={`/photo/${photo.id}`}
               state={{ backTo: `/event/${eventId}`, backLabel: 'Photos' }}
-              className="block h-full w-full"
+              className="block"
               onClick={(e) => {
                 if (longPressBlocked.current) {
                   e.preventDefault();
@@ -120,7 +124,7 @@ export function EventGrid({
               <img
                 alt={photo.alt}
                 draggable={false}
-                className="h-full w-full object-cover photo-grade pointer-events-none"
+                className="block w-full h-auto photo-grade pointer-events-none"
                 src={photo.thumbnailUrl ?? photo.url}
                 referrerPolicy="no-referrer"
               />
