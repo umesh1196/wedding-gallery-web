@@ -1,5 +1,4 @@
 import { motion } from 'motion/react';
-import { Heart } from 'lucide-react';
 import { EVENTS, PHOTOS } from '../lib/data';
 import { Link } from 'react-router-dom';
 import { getGalleryTimeline } from '../lib/galleryTimeline';
@@ -51,7 +50,7 @@ export default function EventsList() {
                 <div className={isWide ? 'aspect-[1.12]' : 'aspect-[0.92] md:aspect-[1.08]'}>
                   <img
                     className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    src={event.coverUrl}
+                    src={event.listCoverUrl ?? event.coverUrl}
                     alt={event.title}
                     referrerPolicy="no-referrer"
                   />
@@ -71,13 +70,7 @@ export default function EventsList() {
                       </h3>
                     </div>
                     <div className="rounded-full border border-white/10 bg-black/20 px-3 py-2 backdrop-blur-sm flex-shrink-0">
-                      <div className="flex items-center gap-3">
-                        <span className="label text-white/70">{event.livePhotoCount} photos</span>
-                        <span className="flex items-center gap-1 text-white/62">
-                          <Heart className="h-3 w-3 fill-current" />
-                          <span className="label">{event.likes}</span>
-                        </span>
-                      </div>
+                      <span className="label text-white/70">{event.livePhotoCount} photos</span>
                     </div>
                   </div>
                 </div>

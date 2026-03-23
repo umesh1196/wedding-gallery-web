@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Photos are served locally — too large for git (600MB)
+public/photos/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

@@ -4,18 +4,17 @@ import { getEventEditorial } from '../../lib/eventEditorial';
 interface EventHeroProps {
   event: Event;
   heroPhoto: Photo;
-  onStartSelection: () => void;
 }
 
-export function EventHero({ event, heroPhoto, onStartSelection }: EventHeroProps) {
+export function EventHero({ event, heroPhoto }: EventHeroProps) {
   const editorial = getEventEditorial(event.id);
 
   return (
     <section className="relative min-h-[340px] overflow-hidden md:min-h-[520px]">
       <img
         alt={event.title}
-        className="absolute inset-0 h-full w-full object-cover"
-        src={heroPhoto.url}
+        className="absolute inset-0 h-full w-full object-cover object-[center_40%]"
+        src={event.coverUrl}
         referrerPolicy="no-referrer"
       />
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(13,13,13,0.18),rgba(13,13,13,0.26)_24%,rgba(13,13,13,0.92)_92%)]" />
@@ -36,12 +35,9 @@ export function EventHero({ event, heroPhoto, onStartSelection }: EventHeroProps
             </div>
 
             <div className="flex lg:justify-end">
-              <button
-                onClick={onStartSelection}
-                className="label inline-flex min-h-11 w-full items-center justify-center rounded-full border border-rose-accent/30 bg-black/24 px-4 text-rose-accent backdrop-blur-sm transition-colors hover:bg-rose-accent/10 lg:w-auto lg:min-w-[14rem]"
-              >
-                Choose moments
-              </button>
+              <div className="label inline-flex min-h-11 w-full items-center justify-center rounded-full border border-white/10 bg-black/18 px-4 text-white/50 backdrop-blur-sm lg:w-auto lg:min-w-[14rem]">
+                Hold any photo to select
+              </div>
             </div>
           </div>
         </div>

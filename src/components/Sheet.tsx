@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'motion/react';
 
 interface SheetProps {
@@ -26,7 +27,7 @@ export function Sheet({ open, onClose, children }: SheetProps) {
     };
   }, [open, onClose]);
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {open && (
         <>
@@ -63,6 +64,7 @@ export function Sheet({ open, onClose, children }: SheetProps) {
           </motion.div>
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

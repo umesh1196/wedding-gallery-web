@@ -9,7 +9,7 @@ import { getEventNavConfig, readRouteState } from '../lib/navigation';
  */
 export function HomeNav() {
   const items = [
-    { icon: ImageIcon,    label: 'Photos',  path: '/' },
+    { icon: ImageIcon,    label: 'Memories', path: '/' },
     { icon: CalendarDays, label: 'Events',  path: '/events' },
     { icon: Folder,       label: 'Albums',  path: '/albums' },
     { icon: Heart,        label: 'Saved',   path: '/saved' },

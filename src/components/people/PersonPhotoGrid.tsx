@@ -58,7 +58,7 @@ export function PersonPhotoGrid({
                           'h-full w-full object-cover transition-all duration-200',
                           isSelected ? 'brightness-[0.9]' : 'brightness-[0.72] saturate-[0.88]'
                         )}
-                        src={photo.url}
+                        src={photo.thumbnailUrl ?? photo.url}
                         referrerPolicy="no-referrer"
                       />
                       <div
@@ -87,7 +87,7 @@ export function PersonPhotoGrid({
                         <img
                           alt={photo.alt}
                           className="h-full w-full object-cover photo-grade"
-                          src={photo.url}
+                          src={photo.thumbnailUrl ?? photo.url}
                           referrerPolicy="no-referrer"
                         />
                       </Link>

@@ -12,8 +12,15 @@ export default function Home() {
   const { publishedEvents, latestPublishedEvent } = getGalleryTimeline(EVENTS, PHOTOS);
   const liveEventIds = new Set(publishedEvents.map((event) => event.id));
   const livePhotos = PHOTOS.filter((photo) => liveEventIds.has(photo.event));
-  const highlights = livePhotos.filter((p) => p.isHighlight);
-  const heroPhoto = highlights[0] ?? livePhotos[0] ?? PHOTOS[0];
+  const ceremonyCover = EVENTS.find((e) => e.id === 'ceremony')?.coverUrl;
+  const ceremonyCoverPhoto = ceremonyCover ? PHOTOS.find((p) => p.url === ceremonyCover) : undefined;
+  const cer55 = PHOTOS.find((p) => p.id === 'cer-55');
+  const eng40 = PHOTOS.find((p) => p.id === 'eng-40');
+  const pinnedIds = new Set([cer55?.id, eng40?.id, ceremonyCoverPhoto?.id]);
+  const otherHighlights = livePhotos.filter((p) => p.isHighlight && !pinnedIds.has(p.id));
+  const highlights = [cer55, eng40, ceremonyCoverPhoto, ...otherHighlights].filter(Boolean) as typeof livePhotos;
+  const receptionCover = EVENTS.find((e) => e.id === 'reception')?.coverUrl;
+  const heroPhoto = (receptionCover && PHOTOS.find((p) => p.url === receptionCover)) ?? highlights[0] ?? livePhotos[0] ?? PHOTOS[0];
   const { favouriteIds, userAlbums } = useViewerStore();
   const savedPhotosCount = favouriteIds.length;
   const isEarlyGallery = publishedEvents.length <= 1;
@@ -27,7 +34,7 @@ export default function Home() {
     >
       <HomeHero
         coupleNames="Shruti & Umesh"
-        dateLabel="Wedding weekend · Dec 10-12, 2025"
+        dateLabel="Wedding · Dec 2025 – Feb 2026"
         heroPhoto={heroPhoto}
         studioName="MPPF Photography"
         freshnessLabel={latestPublishedEvent ? `Latest chapter: ${latestPublishedEvent.title}` : undefined}
@@ -95,7 +102,7 @@ export default function Home() {
             className="group flex items-center justify-between rounded-[1.7rem] border border-white/8 bg-white/[0.025] px-6 py-5 transition-colors hover:border-white/14 hover:bg-white/[0.04] md:px-8 md:py-6"
           >
             <div>
-              <p className="label text-outline">5 wedding chapters · Dec 10–12</p>
+              <p className="label text-outline">5 wedding chapters · Dec '25 – Feb '26</p>
               <h3 className="mt-1.5 font-headline text-[1.8rem] italic font-light text-white leading-none md:text-[2.2rem]">
                 The Haldi. The vows. The dance floor at midnight.
               </h3>

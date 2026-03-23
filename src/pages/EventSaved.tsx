@@ -53,7 +53,7 @@ export default function EventSaved() {
               <img
                 alt={photo.alt}
                 className="w-full h-full object-cover photo-grade hover:scale-105 transition-transform duration-500"
-                src={photo.url}
+                src={photo.thumbnailUrl ?? photo.url}
                 referrerPolicy="no-referrer"
               />
               <div className="absolute bottom-1.5 right-1.5">

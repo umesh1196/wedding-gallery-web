@@ -164,12 +164,13 @@ export default function EventPeople() {
         onShowNewAlbumInput={() => albumPicker.setShowNewAlbumInput(true)}
         onNewAlbumTitleChange={albumPicker.setNewAlbumTitle}
         onCreateAlbum={() => {
-          const createdAlbum = albumPicker.createNewAlbum();
-          if (createdAlbum) {
+          const result = albumPicker.createAlbumAndSubmit();
+          if (result) {
             showFeedback({
-              title: `Created "${createdAlbum.title}"`,
-              message: 'It is ready for these selections.',
+              title: `Added ${result.photoCount} photo${result.photoCount !== 1 ? 's' : ''} to "${result.title}"`,
+              message: 'New album created and photos saved.',
             });
+            resetSelectionState();
           }
         }}
         onSubmit={() => {

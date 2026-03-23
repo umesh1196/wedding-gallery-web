@@ -1,6 +1,6 @@
 import { useParams, Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, Share2, Trash2 } from 'lucide-react';
+import { ArrowLeft, Share2, Trash2, X } from 'lucide-react';
 import { ALBUMS, PHOTOS } from '../lib/data';
 import { useViewerStore } from '../store/viewerStore';
 import { useState } from 'react';
@@ -87,7 +87,7 @@ export default function AlbumDetail() {
             <img
               alt={photo.alt}
               className="w-full h-full object-cover photo-grade"
-              src={photo.url}
+              src={photo.thumbnailUrl ?? photo.url}
               referrerPolicy="no-referrer"
             />
             {userAlbum && (
@@ -150,15 +150,26 @@ export default function AlbumDetail() {
       {/* Share Sheet — centered modal */}
       <Sheet open={showShareSheet} onClose={() => setShowShareSheet(false)}>
         <div className="overflow-y-auto px-6 pt-6 pb-4 md:px-8 md:pt-8">
-          <h3 className="font-headline text-2xl md:text-3xl text-white font-light mb-1">{album.title}</h3>
-          <p className="label text-outline mb-6">{albumPhotos.length} photos to share · Shruti &amp; Umesh</p>
+          <div className="mb-5 flex items-start justify-between gap-4">
+            <div>
+              <h3 className="font-headline text-2xl md:text-3xl text-white font-light mb-1">{album.title}</h3>
+              <p className="label text-outline">{albumPhotos.length} photos to share · Shruti &amp; Umesh</p>
+            </div>
+            <button
+              onClick={() => setShowShareSheet(false)}
+              className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full transition-colors hover:bg-white/5"
+              aria-label="Close"
+            >
+              <X className="h-5 w-5 text-outline" />
+            </button>
+          </div>
 
           {/* Photo strip preview */}
           <div className="no-scrollbar mb-6 flex gap-2 overflow-x-auto pb-1">
             {albumPhotos.slice(0, 5).map((p) => (
               <img
                 key={p.id}
-                src={p.url}
+                src={p.thumbnailUrl ?? p.url}
                 className="w-12 h-12 md:w-14 md:h-14 object-cover flex-shrink-0 rounded"
                 referrerPolicy="no-referrer"
                 alt={p.alt}

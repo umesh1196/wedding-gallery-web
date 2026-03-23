@@ -9,7 +9,7 @@ export function useAlbumPicker(eventId?: string) {
   const [newAlbumTitle, setNewAlbumTitle] = useState('');
   const [photoIds, setPhotoIds] = useState<string[]>([]);
 
-  const editableAlbums = userAlbums.filter((album) => album.eventId === eventId);
+  const editableAlbums = userAlbums;
 
   const reset = () => {
     setIsOpen(false);
@@ -42,6 +42,17 @@ export function useAlbumPicker(eventId?: string) {
     return { albumId, title };
   };
 
+  // Creates a new album and immediately adds all pending photos to it — no second tap needed
+  const createAlbumAndSubmit = () => {
+    if (!newAlbumTitle.trim() || !eventId || photoIds.length === 0) return;
+    const title = newAlbumTitle.trim();
+    const albumId = createAlbum(title, eventId);
+    addPhotosToAlbum(albumId, photoIds);
+    const summary = { albumCount: 1, photoCount: photoIds.length, title };
+    reset();
+    return summary;
+  };
+
   const submitSelection = () => {
     if (selectedAlbumIds.length === 0 || photoIds.length === 0) return false;
 
@@ -67,6 +78,7 @@ export function useAlbumPicker(eventId?: string) {
     setShowNewAlbumInput,
     setNewAlbumTitle,
     createNewAlbum,
+    createAlbumAndSubmit,
     submitSelection,
   };
 }

@@ -24,7 +24,7 @@ export default function EventDetail() {
 
   const event = EVENTS.find((entry) => entry.id === id);
   const eventPhotos = PHOTOS.filter((photo) => photo.event === id);
-  const heroPhoto = eventPhotos.find((photo) => photo.url !== event?.coverUrl) ?? eventPhotos[0];
+  const heroPhoto = eventPhotos.find((photo) => photo.url === event?.coverUrl) ?? eventPhotos[0];
   const editorial = event ? getEventEditorial(event.id) : null;
   const gridPhotos = isSelecting
     ? eventPhotos
@@ -87,7 +87,6 @@ export default function EventDetail() {
         <EventHero
           event={event}
           heroPhoto={heroPhoto}
-          onStartSelection={() => setIsSelecting(true)}
         />
 
           <div className="wrap pt-4 pb-2">
@@ -117,6 +116,10 @@ export default function EventDetail() {
         eventId={id ?? ''}
         isFavourite={isFavourite}
         onToggleSelect={toggleSelect}
+        onLongPress={(photoId) => {
+          setIsSelecting(true);
+          toggleSelect(photoId);
+        }}
       />
 
       <AlbumPickerSheet
@@ -132,12 +135,13 @@ export default function EventDetail() {
         onShowNewAlbumInput={() => albumPicker.setShowNewAlbumInput(true)}
         onNewAlbumTitleChange={albumPicker.setNewAlbumTitle}
         onCreateAlbum={() => {
-          const createdAlbum = albumPicker.createNewAlbum();
-          if (createdAlbum) {
+          const result = albumPicker.createAlbumAndSubmit();
+          if (result) {
             showFeedback({
-              title: `Created "${createdAlbum.title}"`,
-              message: 'You can add your selected moments to it right away.',
+              title: `Added ${result.photoCount} photo${result.photoCount !== 1 ? 's' : ''} to "${result.title}"`,
+              message: 'New album created and photos saved.',
             });
+            exitSelectionMode();
           }
         }}
         onSubmit={() => {

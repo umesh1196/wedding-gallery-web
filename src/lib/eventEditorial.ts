@@ -5,20 +5,20 @@ interface EventEditorialContent {
 }
 
 const EVENT_EDITORIAL: Record<string, EventEditorialContent> = {
+  engagement: {
+    subtitle: 'The first yes, captured in rings, smiles, and the quiet joy of two families becoming one.',
+    chapterNote: 'An intimate chapter of close-ups, nervous laughter, and the simple delight of a moment everyone has been waiting for.',
+    moodLabel: 'Joyful and intimate',
+  },
+  prewedding: {
+    subtitle: 'Portraits taken before the ceremony — candid, unhurried, and full of the couple as they are.',
+    chapterNote: 'A chapter away from the crowd, where the camera catches the two of them in a quieter light before the celebrations begin.',
+    moodLabel: 'Romantic and relaxed',
+  },
   haldi: {
     subtitle: 'Playful colour, warm laughter, and the first rush of celebration settling over the day.',
     chapterNote: 'A bright chapter of teasing smiles, family hands, and the easy joy that arrives before everything becomes ceremonial.',
     moodLabel: 'Playful and sunlit',
-  },
-  mehendi: {
-    subtitle: 'Intricate detail, quiet anticipation, and the slower rhythm of hands being adorned.',
-    chapterNote: 'This chapter leans into texture and closeness, where the smallest gestures begin to feel like part of the larger story.',
-    moodLabel: 'Detailed and intimate',
-  },
-  sangeet: {
-    subtitle: 'Movement, light, and the louder pulse of the celebration coming into view.',
-    chapterNote: 'A chapter full of performance, applause, and the kind of energy that turns family into a single moving crowd.',
-    moodLabel: 'Lively and electric',
   },
   ceremony: {
     subtitle: 'The emotional center of the wedding, held in vows, rituals, and the people closest to them.',
