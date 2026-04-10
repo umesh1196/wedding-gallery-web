@@ -6,6 +6,8 @@ import { useViewerStore } from '../store/viewerStore';
 
 export default function Albums() {
   const { userAlbums } = useViewerStore();
+  const getAlbumPhotoCount = (album: { photoIds?: string[]; photoCount?: number }) =>
+    album.photoCount ?? album.photoIds?.length ?? 0;
 
   const byEvent = EVENTS.map((event) => {
     const studioAlbums = ALBUMS.filter((album) => album.eventId === event.id);
@@ -162,7 +164,7 @@ export default function Albums() {
                           <p className="mt-2 font-headline text-lg leading-tight text-foreground md:text-xl">
                             {album.title}
                           </p>
-                          <p className="mt-1 label text-foreground/62">{album.photoIds.length} photos</p>
+                          <p className="mt-1 label text-foreground/62">{getAlbumPhotoCount(album)} photos</p>
                         </div>
                       </Link>
                     ))}

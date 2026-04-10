@@ -8,7 +8,7 @@ interface SelectionBarProps {
   onExit: () => void;
   onToggleSelectAll: () => void;
   onDownload: () => void;
-  onSave: () => void;
+  onLike: () => void;
   onAddToAlbum: () => void;
 }
 
@@ -19,7 +19,7 @@ export function SelectionBar({
   onExit,
   onToggleSelectAll,
   onDownload,
-  onSave,
+  onLike,
   onAddToAlbum,
 }: SelectionBarProps) {
   return (
@@ -73,13 +73,13 @@ export function SelectionBar({
                   <Download className="h-4.5 w-4.5" />
                 </button>
                 <button
-                  onClick={onSave}
-                  title="Save to my moments (private)"
-                  aria-label="Save to my moments"
+                  onClick={onLike}
+                  title="Like selected photos"
+                  aria-label="Like selected photos"
                   className="flex h-9 flex-shrink-0 items-center gap-1.5 rounded-full bg-foreground/7 px-3 text-foreground/82 transition-colors hover:bg-foreground/10 hover:text-foreground"
                 >
                   <Heart className="h-4 w-4 flex-shrink-0" />
-                  <span className="label">Save to mine</span>
+                  <span className="label">Like selected</span>
                 </button>
                 <button
                   onClick={onAddToAlbum}

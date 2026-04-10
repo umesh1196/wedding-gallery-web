@@ -1,15 +1,87 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, Navigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Heart } from 'lucide-react';
-import { PHOTOS, EVENTS } from '../lib/data';
+import { useEffect, useMemo, useState } from 'react';
+import type { Event, Photo } from '../lib/data';
+import { fetchLikedPhotos } from '../lib/api/interactions';
+import { fetchGalleryCeremonies } from '../lib/api/gallery';
+import { mapCeremonyToEvent, mapGalleryPhotoToPhoto } from '../lib/api/adapters';
+import { useSessionStore } from '../store/sessionStore';
 import { useViewerStore } from '../store/viewerStore';
 
 export default function EventSaved() {
   const { id } = useParams<{ id: string }>();
-  const { favouriteIds } = useViewerStore();
+  const { mode, galleryToken, studioSlug, weddingSlug } = useSessionStore();
+  const { replaceFavourites } = useViewerStore();
+  const [events, setEvents] = useState<Event[]>([]);
+  const [savedPhotos, setSavedPhotos] = useState<Photo[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const event = EVENTS.find((e) => e.id === id);
-  const savedPhotos = PHOTOS.filter((p) => p.event === id && favouriteIds.includes(p.id));
+  useEffect(() => {
+    let active = true;
+
+    if (mode !== 'guest' || !galleryToken || !studioSlug || !weddingSlug) {
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    Promise.all([
+      fetchGalleryCeremonies(studioSlug, weddingSlug, galleryToken),
+      fetchLikedPhotos(studioSlug, weddingSlug, galleryToken),
+    ])
+      .then(([ceremoniesResponse, likesResponse]) => {
+        if (!active) return;
+
+        const nextEvents = ceremoniesResponse.data.map(mapCeremonyToEvent);
+        const nextSavedPhotos = likesResponse.data.map(mapGalleryPhotoToPhoto);
+
+        setEvents(nextEvents);
+        setSavedPhotos(nextSavedPhotos);
+        replaceFavourites(nextSavedPhotos.map((photo) => photo.id));
+      })
+      .catch((loadError: Error) => {
+        if (!active) return;
+        setError(loadError.message);
+      })
+      .finally(() => {
+        if (!active) return;
+        setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [galleryToken, mode, replaceFavourites, studioSlug, weddingSlug]);
+
+  const event = useMemo(() => events.find((entry) => entry.id === id) ?? null, [events, id]);
+  const eventSavedPhotos = useMemo(
+    () => savedPhotos.filter((photo) => photo.event === id),
+    [id, savedPhotos]
+  );
+
+  if (mode !== 'guest' || !galleryToken || !studioSlug || !weddingSlug) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (loading) {
+    return (
+      <div className="wrap min-h-screen py-24">
+        <p className="font-body text-sm text-foreground/62">Loading saved moments…</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="wrap min-h-screen py-24">
+        <p className="font-body text-sm text-foreground/62">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -18,46 +90,49 @@ export default function EventSaved() {
       exit={{ opacity: 0 }}
       className="min-h-screen pt-14 pb-16 md:pt-16 md:pb-16"
     >
-      {/* Page header */}
       <section className="wrap page-header">
-        <p className="label text-outline mb-1">{event?.title || 'Event'}</p>
-        <h2 className="font-headline text-[2.5rem] md:text-5xl lg:text-6xl font-light text-foreground leading-tight">Saved</h2>
-        <p className="label text-outline mt-1">{savedPhotos.length} saved photo{savedPhotos.length !== 1 ? 's' : ''}</p>
+        <p className="label mb-1 text-outline">{event?.title || 'Chapter'}</p>
+        <h2 className="font-headline text-[2.5rem] font-light leading-tight text-foreground md:text-5xl lg:text-6xl">
+          Saved
+        </h2>
+        <p className="label mt-1 text-outline">
+          {eventSavedPhotos.length} saved photo{eventSavedPhotos.length !== 1 ? 's' : ''}
+        </p>
       </section>
 
-      {savedPhotos.length === 0 ? (
+      {eventSavedPhotos.length === 0 ? (
         <div className="wrap flex flex-col items-center justify-center py-20 text-center">
-          <Heart className="w-12 h-12 text-rose-accent/20 fill-current mb-6" />
-          <h3 className="font-headline text-xl md:text-2xl italic font-light text-foreground mb-2">
+          <Heart className="mb-6 h-12 w-12 fill-current text-rose-accent/20" />
+          <h3 className="mb-2 font-headline text-xl italic font-light text-foreground md:text-2xl">
             No saved moments yet
           </h3>
-          <p className="font-body text-sm text-outline leading-relaxed max-w-[240px] mb-8">
+          <p className="mb-8 max-w-[240px] font-body text-sm leading-relaxed text-outline">
             Open any photo and tap the heart to keep it here.
           </p>
           <Link
             to={`/event/${id}`}
-            className="label flex min-h-11 items-center justify-center rounded-2xl border border-rose-accent/30 px-6 py-3 text-rose-accent hover:bg-rose-accent/10 transition-colors"
+            className="label flex min-h-11 items-center justify-center rounded-2xl border border-rose-accent/30 px-6 py-3 text-rose-accent transition-colors hover:bg-rose-accent/10"
           >
             Browse Moments
           </Link>
         </div>
       ) : (
         <section className="grid grid-cols-2 gap-[2px] pb-6 md:grid-cols-4 md:gap-1 md:pb-10 lg:grid-cols-6">
-          {savedPhotos.map((photo) => (
+          {eventSavedPhotos.map((photo) => (
             <Link
               key={photo.id}
-              to={`/photo/${photo.id}`}
-              state={{ backTo: `/event/${id}/saved`, backLabel: 'Saved' }}
-              className="relative aspect-square overflow-hidden block"
+              to={`/photo/${photo.id}?event=${encodeURIComponent(photo.event)}`}
+              state={{ backTo: `/event/${id}/saved`, backLabel: 'Saved', eventId: photo.event }}
+              className="relative block aspect-square overflow-hidden"
             >
               <img
                 alt={photo.alt}
-                className="w-full h-full object-cover photo-grade hover:scale-105 transition-transform duration-500"
+                className="h-full w-full object-cover photo-grade transition-transform duration-500 hover:scale-105"
                 src={photo.thumbnailUrl ?? photo.url}
                 referrerPolicy="no-referrer"
               />
               <div className="absolute bottom-1.5 right-1.5">
-                <Heart className="w-3.5 h-3.5 text-rose-accent fill-current drop-shadow-md" />
+                <Heart className="h-3.5 w-3.5 fill-current text-rose-accent drop-shadow-md" />
               </div>
             </Link>
           ))}

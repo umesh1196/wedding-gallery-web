@@ -1,29 +1,97 @@
 import { motion } from 'motion/react';
-import { Heart, Folder } from 'lucide-react';
-import { ALBUMS, EVENTS, PHOTOS } from '../lib/data';
-import { useViewerStore } from '../store/viewerStore';
-import { HomeHero } from '../components/home/HomeHero';
-import { HighlightStrip } from '../components/home/HighlightStrip';
-import { CollectionEntryCard } from '../components/home/CollectionEntryCard';
-import { Link } from 'react-router-dom';
-import { getGalleryTimeline } from '../lib/galleryTimeline';
+import { ArrowRight, Lock, Sparkles } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useMemo, useState } from 'react';
+import { mapGalleryShellToStudio, mapGalleryShellToWedding } from '../lib/api/adapters';
+import { verifyGalleryAccess } from '../lib/api/gallery';
+import { getDefaultGalleryStudioSlug, getDefaultGalleryWeddingSlug } from '../lib/api/config';
+import { useSessionStore } from '../store/sessionStore';
+
+function formatWeddingDate(dateValue?: string | null) {
+  if (!dateValue) return 'Wedding gallery';
+
+  const parsed = new Date(dateValue);
+  if (Number.isNaN(parsed.getTime())) return 'Wedding gallery';
+
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(parsed);
+}
 
 export default function Home() {
-  const { publishedEvents, latestPublishedEvent } = getGalleryTimeline(EVENTS, PHOTOS);
-  const liveEventIds = new Set(publishedEvents.map((event) => event.id));
-  const livePhotos = PHOTOS.filter((photo) => liveEventIds.has(photo.event));
-  const ceremonyCover = EVENTS.find((e) => e.id === 'ceremony')?.coverUrl;
-  const ceremonyCoverPhoto = ceremonyCover ? PHOTOS.find((p) => p.url === ceremonyCover) : undefined;
-  const cer55 = PHOTOS.find((p) => p.id === 'cer-55');
-  const eng40 = PHOTOS.find((p) => p.id === 'eng-40');
-  const pinnedIds = new Set([cer55?.id, eng40?.id, ceremonyCoverPhoto?.id]);
-  const otherHighlights = livePhotos.filter((p) => p.isHighlight && !pinnedIds.has(p.id));
-  const highlights = [cer55, eng40, ceremonyCoverPhoto, ...otherHighlights].filter(Boolean) as typeof livePhotos;
-  const receptionCover = EVENTS.find((e) => e.id === 'reception')?.coverUrl;
-  const heroPhoto = (receptionCover && PHOTOS.find((p) => p.url === receptionCover)) ?? highlights[0] ?? livePhotos[0] ?? PHOTOS[0];
-  const { favouriteIds, userAlbums } = useViewerStore();
-  const savedPhotosCount = favouriteIds.length;
-  const isEarlyGallery = publishedEvents.length <= 1;
+  const navigate = useNavigate();
+  const {
+    mode,
+    galleryToken,
+    guestIdentityToken,
+    studioSlug: storedStudioSlug,
+    weddingSlug: storedWeddingSlug,
+    currentStudio,
+    currentWedding,
+    loading,
+    error,
+    setGallerySession,
+    setCurrentStudio,
+    setCurrentWedding,
+    setLoading,
+    setError,
+    clearSession,
+  } = useSessionStore();
+  const defaultStudioSlug = useMemo(
+    () => storedStudioSlug || getDefaultGalleryStudioSlug(),
+    [storedStudioSlug]
+  );
+  const defaultWeddingSlug = useMemo(
+    () => storedWeddingSlug || getDefaultGalleryWeddingSlug(),
+    [storedWeddingSlug]
+  );
+  const [studioSlug, setStudioSlug] = useState(defaultStudioSlug);
+  const [weddingSlug, setWeddingSlug] = useState(defaultWeddingSlug);
+  const [password, setPassword] = useState('');
+  const [visitorName, setVisitorName] = useState('');
+
+  const handleVerify = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!studioSlug.trim() || !weddingSlug.trim() || !password.trim()) {
+      setError('Studio slug, wedding slug, and gallery password are required.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await verifyGalleryAccess(
+        studioSlug.trim(),
+        weddingSlug.trim(),
+        password.trim(),
+        visitorName.trim() || undefined,
+        guestIdentityToken || undefined
+      );
+
+      setGallerySession({
+        galleryToken: response.data.session_token,
+        guestIdentityToken: response.data.guest_identity_token ?? guestIdentityToken ?? null,
+        studioSlug: studioSlug.trim(),
+        weddingSlug: weddingSlug.trim(),
+      });
+      setCurrentStudio(mapGalleryShellToStudio(response.data.gallery));
+      setCurrentWedding(mapGalleryShellToWedding(response.data.gallery, weddingSlug.trim()));
+      setPassword('');
+      navigate('/events');
+    } catch (verifyError) {
+      const message = verifyError instanceof Error ? verifyError.message : 'Unable to verify gallery.';
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const isGuestReady = mode === 'guest' && Boolean(galleryToken) && Boolean(currentWedding);
 
   return (
     <motion.div
@@ -32,85 +100,131 @@ export default function Home() {
       exit={{ opacity: 0 }}
       className="mobile-safe-top mobile-home-nav-spacer overflow-x-hidden md:pb-16"
     >
-      <HomeHero
-        coupleNames="Shruti & Umesh"
-        dateLabel="Wedding · Dec 2025 – Feb 2026"
-        heroPhoto={heroPhoto}
-        studioName="MPPF Photography"
-        freshnessLabel={latestPublishedEvent ? `Latest chapter: ${latestPublishedEvent.title}` : undefined}
-      />
-
-      <div className="section-stack py-10 md:py-16">
-        {highlights.length > 0 && <HighlightStrip photos={highlights.slice(0, 3)} />}
-
-        <section className="wrap">
-          <div className="mb-5 md:mb-7">
-            <p className="label text-outline">Your Collections</p>
-            <h2 className="mt-2 font-headline text-[2.15rem] font-light text-foreground md:text-4xl">
-              {isEarlyGallery ? 'Your collection starts here' : 'Keep the moments you want close'}
-            </h2>
-          </div>
-          <div className="grid gap-3 md:grid-cols-2 md:gap-4">
-            <CollectionEntryCard
-              title="Saved"
-              description={
-                savedPhotosCount === 0
-                  ? 'Tap ♡ on any photo as you browse. Your personal collection stays private to you.'
-                  : 'A personal place for the glances, embraces, and little moments you know you will come back to.'
-              }
-              countLabel={savedPhotosCount === 0 ? 'No saved moments yet' : `${savedPhotosCount} kept moment${savedPhotosCount !== 1 ? 's' : ''}`}
-              href={savedPhotosCount === 0 ? '/events' : '/saved'}
-              ctaLabel={savedPhotosCount === 0 ? 'Browse photos →' : 'Open collection →'}
-              icon="saved"
-            />
-            <CollectionEntryCard
-              title="Albums"
-              description="Studio albums are curated and ready to share now. Select your own photos from any event to build a personal album and send one link to anyone."
-              countLabel={`${ALBUMS.length} studio · ${userAlbums.length} personal`}
-              href="/albums"
-              ctaLabel="Browse albums →"
-              icon="albums"
-            />
-          </div>
-
-          {/* Two-track explainer */}
-          <div className="mt-5 grid gap-3 md:grid-cols-2 md:gap-4">
-            <div className="soft-panel rounded-[1.45rem] p-4 md:p-5 flex items-center gap-3">
-              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-rose-accent/12">
-                <Heart className="h-4 w-4 fill-current text-rose-accent" />
-              </div>
-              <div>
-                <p className="label text-foreground/60">Saving photos</p>
-                <p className="mt-1 font-body text-sm text-foreground/70">Tap ♡ on any photo. Private to you.</p>
-              </div>
-            </div>
-            <div className="soft-panel rounded-[1.45rem] p-4 md:p-5 flex items-center gap-3">
-              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-foreground/6">
-                <Folder className="h-4 w-4 text-foreground/80" />
-              </div>
-              <div>
-                <p className="label text-foreground/60">Albums for sharing</p>
-                <p className="mt-1 font-body text-sm text-foreground/70">Select photos → album → one link.</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="wrap">
-          <Link
-            to="/events"
-            className="group flex items-center justify-between rounded-[1.7rem] border border-foreground/8 bg-foreground/[0.025] px-6 py-5 transition-colors hover:border-foreground/14 hover:bg-foreground/[0.04] md:px-8 md:py-6"
-          >
+      <section className="relative overflow-hidden border-b border-foreground/6 bg-[radial-gradient(circle_at_top,rgba(201,80,106,0.18),transparent_36%),linear-gradient(180deg,#0f0d0e,#141414)]">
+        <div className="wrap py-18 md:py-24">
+          <div className="grid gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(22rem,0.9fr)] lg:items-center">
             <div>
-              <p className="label text-outline">5 chapters · Dec '25 – Feb '26</p>
-              <h3 className="mt-1.5 font-headline text-[1.8rem] italic font-light text-foreground leading-none md:text-[2.2rem]">
-                The Haldi. The vows. The dance floor at midnight.
-              </h3>
+              <p className="label text-white/48">
+                {currentStudio?.studio_name ?? 'Wedding Gallery'}
+              </p>
+              <h1 className="mt-4 font-headline text-[3rem] font-light leading-[0.95] text-white md:text-6xl">
+                {currentWedding?.couple_name ?? 'Enter the gallery'}
+              </h1>
+              <p className="mt-4 max-w-2xl font-body text-base leading-relaxed text-white/72 md:text-lg">
+                {isGuestReady
+                  ? `You are inside the live gallery for ${currentWedding?.couple_name}. Move through each chapter and open the latest moments as they land.`
+                  : 'Use the wedding password to open the client gallery. Once verified, the chapters page and photo grids will pull from the real backend.'}
+              </p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                {isGuestReady ? (
+                  <>
+                    <Link
+                      to="/events"
+                      className="label inline-flex min-h-11 items-center gap-2 rounded-full bg-rose-accent px-5 text-white transition-colors hover:bg-rose-accent/90"
+                    >
+                      Open Chapters <ArrowRight className="h-4 w-4" />
+                    </Link>
+                    <button
+                      onClick={() => clearSession()}
+                      className="label inline-flex min-h-11 items-center rounded-full border border-white/12 px-5 text-white/80 transition-colors hover:text-white"
+                    >
+                      Switch Gallery
+                    </button>
+                  </>
+                ) : (
+                  <div className="inline-flex min-h-11 items-center rounded-full border border-white/12 bg-white/4 px-4 text-white/68">
+                    <Sparkles className="mr-2 h-4 w-4 text-rose-accent" />
+                    Live client access now uses the Rails backend
+                  </div>
+                )}
+              </div>
             </div>
-            <span className="label text-rose-accent transition-transform group-hover:translate-x-1">→</span>
-          </Link>
-        </section>
-      </div>
+
+            <div className="soft-panel rounded-[2rem] border border-white/8 bg-white/6 p-6 backdrop-blur-xl md:p-7">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-rose-accent/16 text-rose-accent">
+                  <Lock className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="label text-white/48">Client Access</p>
+                  <h2 className="mt-1 font-headline text-[2rem] italic leading-none text-white">
+                    Gallery entry
+                  </h2>
+                </div>
+              </div>
+
+              {isGuestReady ? (
+                <div className="mt-6 space-y-4">
+                  <div className="rounded-[1.4rem] border border-white/8 bg-black/18 p-4">
+                    <p className="label text-white/42">Active gallery</p>
+                    <p className="mt-2 font-headline text-[1.8rem] text-white">
+                      {currentWedding?.couple_name}
+                    </p>
+                    <p className="mt-2 font-body text-sm text-white/70">
+                      {formatWeddingDate(currentWedding?.wedding_date)} · {storedStudioSlug || studioSlug}
+                    </p>
+                  </div>
+                  <p className="font-body text-sm leading-relaxed text-white/62">
+                    The guest session is active in this browser. You can head straight to the chapters view now.
+                  </p>
+                </div>
+              ) : (
+                <form className="mt-6 space-y-4" onSubmit={handleVerify}>
+                  <label className="block">
+                    <span className="label text-white/44">Studio Slug</span>
+                    <input
+                      value={studioSlug}
+                      onChange={(event) => setStudioSlug(event.target.value)}
+                      className="mt-2 min-h-12 w-full rounded-2xl border border-white/10 bg-black/16 px-4 text-white outline-none placeholder:text-white/24"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="label text-white/44">Wedding Slug</span>
+                    <input
+                      value={weddingSlug}
+                      onChange={(event) => setWeddingSlug(event.target.value)}
+                      className="mt-2 min-h-12 w-full rounded-2xl border border-white/10 bg-black/16 px-4 text-white outline-none placeholder:text-white/24"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="label text-white/44">Visitor Name</span>
+                    <input
+                      value={visitorName}
+                      onChange={(event) => setVisitorName(event.target.value)}
+                      placeholder="Asha"
+                      className="mt-2 min-h-12 w-full rounded-2xl border border-white/10 bg-black/16 px-4 text-white outline-none placeholder:text-white/24"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="label text-white/44">Gallery Password</span>
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
+                      className="mt-2 min-h-12 w-full rounded-2xl border border-white/10 bg-black/16 px-4 text-white outline-none placeholder:text-white/24"
+                    />
+                  </label>
+
+                  {error && (
+                    <div className="rounded-2xl border border-rose-accent/24 bg-rose-accent/10 px-4 py-3">
+                      <p className="font-body text-sm text-white/82">{error}</p>
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="label flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-rose-accent text-white transition-colors hover:bg-rose-accent/90 disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    {loading ? 'Checking access…' : 'Enter Gallery'}
+                    {!loading && <ArrowRight className="h-4 w-4" />}
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
     </motion.div>
   );
 }

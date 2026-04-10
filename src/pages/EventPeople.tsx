@@ -156,6 +156,7 @@ export default function EventPeople() {
         onClose={albumPicker.closePicker}
         photoCount={albumPicker.photoIds.length}
         albums={albumPicker.editableAlbums}
+        loading={albumPicker.loadingAlbums}
         selectedAlbumIds={albumPicker.selectedAlbumIds}
         showNewAlbumInput={albumPicker.showNewAlbumInput}
         newAlbumTitle={albumPicker.newAlbumTitle}
@@ -163,8 +164,8 @@ export default function EventPeople() {
         onToggleAlbum={albumPicker.toggleAlbum}
         onShowNewAlbumInput={() => albumPicker.setShowNewAlbumInput(true)}
         onNewAlbumTitleChange={albumPicker.setNewAlbumTitle}
-        onCreateAlbum={() => {
-          const result = albumPicker.createAlbumAndSubmit();
+        onCreateAlbum={async () => {
+          const result = await albumPicker.createAlbumAndSubmit();
           if (result) {
             showFeedback({
               title: `Added ${result.photoCount} photo${result.photoCount !== 1 ? 's' : ''} to "${result.title}"`,
@@ -173,8 +174,8 @@ export default function EventPeople() {
             resetSelectionState();
           }
         }}
-        onSubmit={() => {
-          const result = albumPicker.submitSelection();
+        onSubmit={async () => {
+          const result = await albumPicker.submitSelection();
           if (result) {
             showFeedback({
               title: `Added ${result.photoCount} photo${result.photoCount !== 1 ? 's' : ''}`,

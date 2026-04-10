@@ -1,10 +1,50 @@
 import { motion } from 'motion/react';
-import { EVENTS, PHOTOS } from '../lib/data';
-import { Link } from 'react-router-dom';
-import { getGalleryTimeline } from '../lib/galleryTimeline';
+import { Link, Navigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { fetchGalleryCeremonies } from '../lib/api/gallery';
+import { mapCeremonyToEvent } from '../lib/api/adapters';
+import type { Event } from '../lib/data';
+import { useSessionStore } from '../store/sessionStore';
 
 export default function EventsList() {
-  const { publishedEvents, upcomingEvents, latestPublishedEvent } = getGalleryTimeline(EVENTS, PHOTOS);
+  const { mode, galleryToken, studioSlug, weddingSlug, currentWedding } = useSessionStore();
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+
+    if (mode !== 'guest' || !galleryToken || !studioSlug || !weddingSlug) {
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    fetchGalleryCeremonies(studioSlug, weddingSlug, galleryToken)
+      .then((response) => {
+        if (!active) return;
+        setEvents(response.data.map(mapCeremonyToEvent));
+      })
+      .catch((loadError: Error) => {
+        if (!active) return;
+        setError(loadError.message);
+      })
+      .finally(() => {
+        if (!active) return;
+        setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [galleryToken, mode, studioSlug, weddingSlug]);
+
+  if (mode !== 'guest' || !galleryToken || !studioSlug || !weddingSlug) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <motion.div
@@ -13,26 +53,34 @@ export default function EventsList() {
       exit={{ opacity: 0 }}
       className="mobile-safe-top mobile-home-nav-spacer min-h-screen md:pb-16"
     >
-      {/* Page header */}
       <section className="wrap page-header overflow-visible">
-        <p className="label text-outline mb-1">Shruti & Umesh</p>
+        <p className="label text-outline mb-1">{currentWedding?.couple_name ?? 'Wedding Gallery'}</p>
         <h2 className="font-headline pt-1 text-[36px] md:text-5xl lg:text-6xl font-light text-foreground leading-[1.12]">
           Chapters
         </h2>
         <p className="label text-outline mt-3">
-          {publishedEvents.length} chapter{publishedEvents.length !== 1 ? 's' : ''}
-          {upcomingEvents.length > 0 ? ` · ${upcomingEvents.length} coming soon` : ''}
+          {loading
+            ? 'Loading chapters…'
+            : `${events.length} chapter${events.length !== 1 ? 's' : ''} ready to browse`}
         </p>
-        {latestPublishedEvent && (
+        {error && (
           <div className="mt-3 inline-flex rounded-full border border-rose-accent/18 bg-rose-accent/8 px-3 py-2">
-            <span className="label text-rose-accent">Latest chapter: {latestPublishedEvent.title}</span>
+            <span className="label text-rose-accent">{error}</span>
           </div>
         )}
       </section>
 
-      {/* Published events — full-width stacked cards */}
       <section className="wrap flex flex-col gap-4 pb-6 md:gap-5 md:pb-10">
-        {publishedEvents.map((event) => (
+        {!loading && events.length === 0 && (
+          <div className="soft-panel rounded-[1.8rem] p-6 md:p-7">
+            <p className="font-body text-sm leading-relaxed text-foreground/62 md:text-base">
+              This gallery does not have any published chapters yet. Once the studio uploads and processes photos,
+              they will appear here automatically.
+            </p>
+          </div>
+        )}
+
+        {events.map((event) => (
           <Link
             key={event.id}
             to={`/event/${event.id}`}
@@ -57,50 +105,11 @@ export default function EventsList() {
                 </h3>
               </div>
               <div className="flex-shrink-0 rounded-full border border-white/12 bg-black/30 px-3 py-1.5 backdrop-blur-sm">
-                <span className="label text-white/70">{event.livePhotoCount} photos</span>
+                <span className="label text-white/70">{event.photoCount} photos</span>
               </div>
             </div>
           </Link>
         ))}
-
-        {/* Coming Soon */}
-        {upcomingEvents.length > 0 && (
-          <div className="mt-8 md:mt-10">
-            <div className="mb-4 md:mb-5">
-              <p className="label text-outline">Still To Come</p>
-              <h3 className="mt-2 font-headline text-[1.9rem] font-light text-foreground md:text-[2.35rem]">
-                Chapters yet to unfold
-              </h3>
-            </div>
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-              {upcomingEvents.map((event) => (
-                <div
-                  key={event.id}
-                  className="soft-panel overflow-hidden rounded-[1.65rem] border border-foreground/6"
-                >
-                  <div className="relative aspect-[1.1] overflow-hidden">
-                    <img
-                      className="h-full w-full object-cover grayscale-[0.2] opacity-70"
-                      src={event.coverUrl}
-                      alt={event.title}
-                      referrerPolicy="no-referrer"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/86 via-black/35 to-black/10" />
-                    <div className="absolute right-4 top-4 rounded-full border border-white/10 bg-black/24 px-3 py-2 backdrop-blur-sm">
-                      <span className="label text-white/74">Coming Soon</span>
-                    </div>
-                    <div className="absolute inset-x-0 bottom-0 p-4 md:p-5">
-                      <p className="label text-white/46">{event.date}</p>
-                      <p className="mt-2 font-headline text-[2rem] italic leading-none text-white">
-                        {event.title}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </section>
     </motion.div>
   );

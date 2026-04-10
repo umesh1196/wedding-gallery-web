@@ -2,6 +2,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { Heart, Image as ImageIcon, Users, Folder, CalendarDays } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { getEventNavConfig, readRouteState } from '../lib/navigation';
+import { useSessionStore } from '../store/sessionStore';
 import { ThemeToggle } from './ThemeToggle';
 
 /**
@@ -9,6 +10,7 @@ import { ThemeToggle } from './ThemeToggle';
  * Always renders as a top bar. No mobile-only classes.
  */
 export function HomeNav() {
+  const currentStudio = useSessionStore((state) => state.currentStudio);
   const items = [
     { icon: ImageIcon,    label: 'Memories', path: '/' },
     { icon: CalendarDays, label: 'Chapters', path: '/events' },
@@ -21,7 +23,9 @@ export function HomeNav() {
       <header className="hidden md:flex sticky top-0 z-50 h-14 md:h-16 items-center bg-background/80 backdrop-blur-xl border-b border-foreground/5">
         {/* Left: brand */}
         <div className="flex-1 flex items-center pl-4 md:pl-8 lg:pl-12">
-          <span className="label text-outline whitespace-nowrap">MPPF Photography</span>
+          <span className="label text-outline whitespace-nowrap">
+            {currentStudio?.studio_name ?? 'Wedding Gallery'}
+          </span>
         </div>
 
         {/* Center: nav links */}

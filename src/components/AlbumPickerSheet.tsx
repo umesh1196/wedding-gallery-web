@@ -1,5 +1,5 @@
 import { Plus, X } from 'lucide-react';
-import type { UserAlbum } from '../store/viewerStore';
+import type { PickerAlbum } from '../hooks/useAlbumPicker';
 import { cn } from '../lib/utils';
 import { Sheet } from './Sheet';
 
@@ -7,7 +7,8 @@ interface AlbumPickerSheetProps {
   open: boolean;
   onClose: () => void;
   photoCount: number;
-  albums: UserAlbum[];
+  albums: PickerAlbum[];
+  loading?: boolean;
   selectedAlbumIds: string[];
   showNewAlbumInput: boolean;
   newAlbumTitle: string;
@@ -15,8 +16,8 @@ interface AlbumPickerSheetProps {
   onToggleAlbum: (albumId: string) => void;
   onShowNewAlbumInput: () => void;
   onNewAlbumTitleChange: (value: string) => void;
-  onCreateAlbum: () => void;
-  onSubmit: () => void;
+  onCreateAlbum: () => void | Promise<void>;
+  onSubmit: () => void | Promise<void>;
 }
 
 export function AlbumPickerSheet({
@@ -24,6 +25,7 @@ export function AlbumPickerSheet({
   onClose,
   photoCount,
   albums,
+  loading = false,
   selectedAlbumIds,
   showNewAlbumInput,
   newAlbumTitle,
@@ -104,30 +106,27 @@ export function AlbumPickerSheet({
                       </svg>
                     )}
                   </div>
-                  <div className="text-left">
-                    <p className="font-headline text-lg leading-tight text-foreground">{album.title}</p>
-                    <p className="label text-outline">{album.photoIds.length} photos</p>
+                    <div className="text-left">
+                      <p className="font-headline text-lg leading-tight text-foreground">{album.title}</p>
+                      <p className="label text-outline">{album.photoCount} photos</p>
+                    </div>
                   </div>
+                <div className="flex h-10 w-10 items-center justify-center rounded border border-foreground/10 bg-foreground/5">
+                  <Plus className="h-4 w-4 text-foreground/20" />
                 </div>
-                {album.coverUrl ? (
-                  <img
-                    src={album.coverUrl}
-                    className="h-10 w-10 rounded object-cover grayscale-[0.3]"
-                    alt={album.title}
-                    referrerPolicy="no-referrer"
-                  />
-                ) : (
-                  <div className="flex h-10 w-10 items-center justify-center rounded border border-foreground/10 bg-foreground/5">
-                    <Plus className="h-4 w-4 text-foreground/20" />
-                  </div>
-                )}
               </button>
             );
           })}
 
-          {albums.length === 0 && (
+          {!loading && albums.length === 0 && (
             <div className="rounded border border-foreground/6 bg-foreground/[0.02] px-4 py-4">
               <p className="font-body text-sm text-outline">{emptyMessage}</p>
+            </div>
+          )}
+
+          {loading && (
+            <div className="rounded border border-foreground/6 bg-foreground/[0.02] px-4 py-4">
+              <p className="font-body text-sm text-outline">Loading your albums…</p>
             </div>
           )}
         </div>

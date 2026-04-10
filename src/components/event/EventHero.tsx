@@ -14,7 +14,7 @@ export function EventHero({ event, heroPhoto }: EventHeroProps) {
       <img
         alt={event.title}
         className="absolute inset-0 h-full w-full object-cover object-[center_40%]"
-        src={event.coverUrl}
+        src={heroPhoto.url}
         referrerPolicy="no-referrer"
       />
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(13,13,13,0.18),rgba(13,13,13,0.26)_24%,rgba(13,13,13,0.92)_92%)]" />

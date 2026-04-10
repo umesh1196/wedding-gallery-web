@@ -12,22 +12,39 @@ import EventSaved from './pages/EventSaved';
 import EventPeople from './pages/EventPeople';
 import { HomeNav, EventNav } from './components/Navigation';
 import { PageTransition } from './components/PageTransition';
+import { SessionBootstrap } from './components/admin/SessionBootstrap';
+import { AdminRoute } from './components/admin/AdminRoute';
+import { GalleryBootstrap } from './components/gallery/GalleryBootstrap';
+import AdminLogin from './pages/admin/AdminLogin';
+import AdminDashboard from './pages/admin/AdminDashboard';
 
 function AppContent() {
   const location = useLocation();
   const isPhotoViewer = location.pathname.startsWith('/photo/');
   const isEventPage = location.pathname.startsWith('/event/');
-  const showHomeNav = !isPhotoViewer && !isEventPage;
+  const isAdminPage = location.pathname.startsWith('/admin');
+  const showHomeNav = !isPhotoViewer && !isEventPage && !isAdminPage;
   const eventId = isEventPage ? location.pathname.split('/')[2] : null;
 
   return (
     <div className="min-h-screen bg-background">
+      <SessionBootstrap />
+      <GalleryBootstrap />
       {showHomeNav && <HomeNav />}
-      {!isPhotoViewer && isEventPage && eventId && <EventNav eventId={eventId} />}
+      {!isPhotoViewer && isEventPage && eventId && !isAdminPage && <EventNav eventId={eventId} />}
 
       <AnimatePresence mode="wait" initial={false}>
         <PageTransition key={location.pathname}>
           <Routes location={location}>
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route
+              path="/admin"
+              element={
+                <AdminRoute>
+                  <AdminDashboard />
+                </AdminRoute>
+              }
+            />
             <Route path="/" element={<Home />} />
             <Route path="/events" element={<EventsList />} />
             <Route path="/albums" element={<Albums />} />

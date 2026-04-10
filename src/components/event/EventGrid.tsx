@@ -26,6 +26,7 @@ export function EventGrid({
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressBlocked = useRef(false);
   const pointerStart = useRef<{ x: number; y: number } | null>(null);
+  const getGridImageSrc = (photo: Photo) => photo.url || photo.thumbnailUrl || '';
 
   const handlePointerDown = (e: React.PointerEvent, photoId: string) => {
     if (isSelecting) return;
@@ -88,7 +89,7 @@ export function EventGrid({
                     ? 'brightness-[0.88] saturate-[1.05]'
                     : 'brightness-[0.72] saturate-[0.88]'
                 )}
-                src={photo.thumbnailUrl ?? photo.url}
+                src={getGridImageSrc(photo)}
                 referrerPolicy="no-referrer"
               />
               <div
@@ -111,8 +112,8 @@ export function EventGrid({
             </div>
           ) : (
             <Link
-              to={`/photo/${photo.id}`}
-              state={{ backTo: `/event/${eventId}`, backLabel: 'Photos' }}
+              to={`/photo/${photo.id}?event=${encodeURIComponent(eventId)}`}
+              state={{ backTo: `/event/${eventId}`, backLabel: 'Photos', eventId }}
               className="block"
               onClick={(e) => {
                 if (longPressBlocked.current) {
@@ -125,7 +126,7 @@ export function EventGrid({
                 alt={photo.alt}
                 draggable={false}
                 className="block w-full h-auto photo-grade pointer-events-none"
-                src={photo.thumbnailUrl ?? photo.url}
+                src={getGridImageSrc(photo)}
                 referrerPolicy="no-referrer"
               />
               {isFavourite(photo.id) && (

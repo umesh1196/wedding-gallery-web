@@ -4,6 +4,7 @@ export interface GalleryRouteState {
   backTo?: string;
   backLabel?: string;
   fromEventTabs?: boolean;
+  eventId?: string;
 }
 
 export interface GalleryBackState {

@@ -1,6 +1,6 @@
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
-import { PHOTOS } from '../lib/data';
+import type { Photo } from '../lib/data';
 import { useViewerStore } from '../store/viewerStore';
 import { useEffect, useRef, useState, type TouchEvent } from 'react';
 import { AlbumPickerSheet } from '../components/AlbumPickerSheet';
@@ -9,31 +9,174 @@ import { useAlbumPicker } from '../hooks/useAlbumPicker';
 import { useFeedback } from '../components/FeedbackProvider';
 import { ViewerHeader } from '../components/viewer/ViewerHeader';
 import { ViewerActions } from '../components/viewer/ViewerActions';
+import { ViewerComments } from '../components/viewer/ViewerComments';
 import { ViewerDetails } from '../components/viewer/ViewerDetails';
 import { readRouteState, toBackState } from '../lib/navigation';
+import { fetchGalleryCeremonies, fetchGalleryPhotos } from '../lib/api/gallery';
+import {
+  createPhotoComment,
+  deletePhotoComment,
+  fetchPhotoComments,
+  likePhoto,
+  unlikePhoto,
+} from '../lib/api/interactions';
+import { mapCeremonyToEvent, mapGalleryPhotoToPhoto } from '../lib/api/adapters';
+import { useSessionStore } from '../store/sessionStore';
+import type { BackendComment, BackendGalleryPhoto } from '../lib/api/types';
+import { fetchPhotoDownload } from '../lib/api/downloads';
+
+function getEventIdFromBackTarget(backTo?: string) {
+  if (!backTo?.startsWith('/event/')) return null;
+
+  const segments = backTo.split('/').filter(Boolean);
+  return segments[1] ?? null;
+}
+
+function getEventIdFromSearch(search: string) {
+  const params = new URLSearchParams(search);
+  return params.get('event');
+}
 
 export default function PhotoViewer() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const { toggleFavourite, isFavourite, favouriteIds } = useViewerStore();
+  const { mode, galleryToken, studioSlug, weddingSlug, currentWedding } = useSessionStore();
+  const { isFavourite, favouriteIds, syncPhotoLikeStates } = useViewerStore();
   const [showChrome, setShowChrome] = useState(true);
   const [showDetails, setShowDetails] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [eventName, setEventName] = useState('');
+  const [eventDate, setEventDate] = useState('');
+  const [eventPhotos, setEventPhotos] = useState<Photo[]>([]);
+  const [rawPhotos, setRawPhotos] = useState<BackendGalleryPhoto[]>([]);
+  const [comments, setComments] = useState<BackendComment[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [commentDraft, setCommentDraft] = useState('');
+  const [submittingComment, setSubmittingComment] = useState(false);
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
   const chromeTimeoutRef = useRef<number | null>(null);
   const { showFeedback } = useFeedback();
-
-  const photo = PHOTOS.find((p) => p.id === id);
-  const eventPhotos = PHOTOS.filter((p) => p.event === photo?.event);
-  const currentIndex = eventPhotos.findIndex((p) => p.id === id);
+  const navigationState = readRouteState(location);
+  const eventId =
+    navigationState?.eventId ||
+    getEventIdFromBackTarget(navigationState?.backTo) ||
+    getEventIdFromSearch(location.search);
+  const photo = eventPhotos.find((entry) => entry.id === id);
+  const currentPhotoPayload = rawPhotos.find((entry) => entry.id === id);
+  const currentIndex = eventPhotos.findIndex((entry) => entry.id === id);
   const prevPhoto = currentIndex > 0 ? eventPhotos[currentIndex - 1] : undefined;
   const nextPhoto = currentIndex >= 0 ? eventPhotos[currentIndex + 1] : undefined;
-  const navigationState = readRouteState(location);
   const backTo = navigationState?.backTo ?? (photo ? `/event/${photo.event}` : '/events');
   const backLabel = navigationState?.backLabel ?? 'Photos';
   const photoState = navigationState ? toBackState(backTo, backLabel) : undefined;
-  const albumPicker = useAlbumPicker(photo?.event);
+  const albumPicker = useAlbumPicker(photo?.event ?? eventId ?? undefined);
+
+  useEffect(() => {
+    let active = true;
+
+    if (mode !== 'guest' || !galleryToken || !studioSlug || !weddingSlug || !id) {
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    fetchGalleryCeremonies(studioSlug, weddingSlug, galleryToken)
+      .then(async (ceremoniesResponse) => {
+        if (!active) return;
+
+        const mappedEvents = ceremoniesResponse.data.map(mapCeremonyToEvent);
+        const preferredCeremonies = eventId
+          ? [
+              ...ceremoniesResponse.data.filter((ceremony) => ceremony.slug === eventId),
+              ...ceremoniesResponse.data.filter((ceremony) => ceremony.slug !== eventId),
+            ]
+          : ceremoniesResponse.data;
+
+        for (const ceremony of preferredCeremonies) {
+          const photosResponse = await fetchGalleryPhotos(
+            studioSlug,
+            weddingSlug,
+            ceremony.slug,
+            galleryToken,
+            200
+          );
+          const matchingPhoto = photosResponse.data.find((entry) => entry.id === id);
+
+          if (!matchingPhoto) continue;
+
+          const event = mappedEvents.find((entry) => entry.id === ceremony.slug);
+          const nextRawPhotos = photosResponse.data;
+
+          setEventName(event?.title ?? ceremony.name ?? 'Chapter');
+          setEventDate(event?.date ?? '');
+          setRawPhotos(nextRawPhotos);
+          setEventPhotos(nextRawPhotos.map(mapGalleryPhotoToPhoto));
+          syncPhotoLikeStates(
+            nextRawPhotos.map((photo) => ({
+              id: photo.id,
+              liked: Boolean(photo.is_liked),
+            }))
+          );
+          return;
+        }
+
+        throw new Error('This photo could not be found in the current gallery.');
+      })
+      .catch((loadError: Error) => {
+        if (!active) return;
+        setError(loadError.message);
+      })
+      .finally(() => {
+        if (!active) return;
+        setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [eventId, galleryToken, id, mode, studioSlug, syncPhotoLikeStates, weddingSlug]);
+
+  useEffect(() => {
+    let active = true;
+
+    if (
+      mode !== 'guest' ||
+      !galleryToken ||
+      !studioSlug ||
+      !weddingSlug ||
+      !id ||
+      !currentWedding?.allow_comments
+    ) {
+      setComments([]);
+      setCommentsLoading(false);
+      return;
+    }
+
+    setCommentsLoading(true);
+
+    fetchPhotoComments(studioSlug, weddingSlug, id, galleryToken)
+      .then((response) => {
+        if (!active) return;
+        setComments(response.data);
+      })
+      .catch(() => {
+        if (!active) return;
+        setComments([]);
+      })
+      .finally(() => {
+        if (!active) return;
+        setCommentsLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [currentWedding?.allow_comments, galleryToken, id, mode, studioSlug, weddingSlug]);
 
   const goToPrevPhoto = () => {
     if (prevPhoto) navigate(`/photo/${prevPhoto.id}`, { state: photoState });
@@ -82,10 +225,6 @@ export default function PhotoViewer() {
     };
   }, [showChrome, photo?.id]);
 
-  if (!photo) return null;
-
-  const liked = isFavourite(photo.id);
-
   const handleTouchStart = (event: TouchEvent<HTMLDivElement>) => {
     const touch = event.touches[0];
     touchStartX.current = touch.clientX;
@@ -115,11 +254,17 @@ export default function PhotoViewer() {
     goToNextPhoto();
   };
 
+  const revealChrome = () => {
+    setShowChrome(true);
+  };
+
   const handleShare = async () => {
+    if (!photo) return;
+
     const shareUrl = window.location.href;
     const shareData = {
-      title: `${photo.event} photo`,
-      text: `${photo.alt} · Shruti & Umesh wedding gallery`,
+      title: `${eventName} photo`,
+      text: `${photo.alt} · ${eventName}`,
       url: shareUrl,
     };
 
@@ -140,18 +285,119 @@ export default function PhotoViewer() {
     }
   };
 
-  const handleSave = () => {
-    downloadPhoto(photo.url, buildPhotoFilename(photo.alt, photo.id));
-    setShowChrome(true);
-    showFeedback({
-      title: 'Download starting',
-      message: 'Your browser will save this photo for you.',
-      variant: 'info',
-    });
+  const handleSave = async () => {
+    if (!photo || !galleryToken || !studioSlug || !weddingSlug) return;
+
+    try {
+      const response = await fetchPhotoDownload(studioSlug, weddingSlug, photo.id, galleryToken);
+      downloadPhoto(
+        response.data.download_url,
+        response.data.filename || buildPhotoFilename(photo.alt, photo.id)
+      );
+      setShowChrome(true);
+      showFeedback({
+        title: 'Download starting',
+        message: 'You are downloading the original photo file.',
+        variant: 'info',
+      });
+    } catch (downloadError) {
+      showFeedback({
+        title: 'Could not start download',
+        message:
+          downloadError instanceof Error ? downloadError.message : 'Please try again in a moment.',
+        variant: 'info',
+      });
+    }
   };
 
-  const revealChrome = () => {
-    setShowChrome(true);
+  const handleToggleLike = async () => {
+    if (!photo || !galleryToken || !studioSlug || !weddingSlug) return;
+
+    const alreadySaved = liked;
+    const isFirstSave = !alreadySaved && favouriteIds.length === 0;
+
+    revealChrome();
+    syncPhotoLikeStates([{ id: photo.id, liked: !alreadySaved }]);
+
+    try {
+      const response = alreadySaved
+        ? await unlikePhoto(studioSlug, weddingSlug, photo.id, galleryToken)
+        : await likePhoto(studioSlug, weddingSlug, photo.id, galleryToken);
+
+      syncPhotoLikeStates([{ id: response.data.id, liked: response.data.liked }]);
+      showFeedback({
+        title: alreadySaved ? 'Removed from saved' : 'Saved to your moments',
+        message: alreadySaved
+          ? 'This photo has been removed from your saved collection.'
+          : isFirstSave
+            ? 'Your first saved moment is waiting in the Saved tab.'
+            : 'You can revisit this anytime from Saved.',
+      });
+    } catch (likeError) {
+      syncPhotoLikeStates([{ id: photo.id, liked: alreadySaved }]);
+      showFeedback({
+        title: 'Could not update saved photos',
+        message:
+          likeError instanceof Error
+            ? likeError.message
+            : 'Please try again in a moment.',
+        variant: 'info',
+      });
+    }
+  };
+
+  const handleSubmitComment = async () => {
+    if (!id || !galleryToken || !studioSlug || !weddingSlug || !commentDraft.trim()) return;
+
+    setSubmittingComment(true);
+
+    try {
+      const response = await createPhotoComment(
+        studioSlug,
+        weddingSlug,
+        id,
+        galleryToken,
+        commentDraft.trim()
+      );
+      setComments((current) => [response.data, ...current]);
+      setCommentDraft('');
+      showFeedback({
+        title: 'Comment added',
+        message: 'Your note is now part of this photo conversation.',
+      });
+    } catch (commentError) {
+      showFeedback({
+        title: 'Could not add comment',
+        message:
+          commentError instanceof Error ? commentError.message : 'Please try again in a moment.',
+        variant: 'info',
+      });
+    } finally {
+      setSubmittingComment(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    if (!galleryToken || !studioSlug || !weddingSlug) return;
+
+    const previous = comments;
+    setComments((current) => current.filter((comment) => comment.id !== commentId));
+
+    try {
+      await deletePhotoComment(studioSlug, weddingSlug, commentId, galleryToken);
+      showFeedback({
+        title: 'Comment removed',
+        message: 'Your comment has been deleted from this photo.',
+      });
+    } catch (commentError) {
+      setComments(previous);
+      showFeedback({
+        title: 'Could not remove comment',
+        message:
+          commentError instanceof Error ? commentError.message : 'Please try again in a moment.',
+        variant: 'info',
+      });
+    }
   };
 
   const toggleChrome = () => {
@@ -162,7 +408,28 @@ export default function PhotoViewer() {
     });
   };
 
-  const caption = photo.alt.length > 54 ? `${photo.alt.slice(0, 54)}...` : photo.alt;
+  if (loading) {
+    return (
+      <div className="flex h-[100dvh] items-center justify-center bg-black">
+        <p className="font-body text-sm text-white/70">Loading photo…</p>
+      </div>
+    );
+  }
+
+  if (error || !photo) {
+    return (
+      <div className="flex h-[100dvh] items-center justify-center bg-black px-6 text-center">
+        <p className="font-body text-sm text-white/70">
+          {error ?? 'This photo is not available right now.'}
+        </p>
+      </div>
+    );
+  }
+
+  const liked = isFavourite(photo.id);
+  const photoLabel = photo.alt || currentPhotoPayload?.original_filename || 'Wedding photo';
+  const caption = photoLabel.length > 54 ? `${photoLabel.slice(0, 54)}...` : photoLabel;
+  const commentsEnabled = currentWedding?.allow_comments !== false;
 
   return (
     <motion.div
@@ -179,7 +446,7 @@ export default function PhotoViewer() {
       >
         <img
           src={photo.url}
-          alt={photo.alt}
+          alt={photoLabel}
           className="h-full w-full object-contain"
           referrerPolicy="no-referrer"
         />
@@ -296,20 +563,7 @@ export default function PhotoViewer() {
                         revealChrome();
                         handleShare();
                       }}
-                      onToggleFavourite={() => {
-                        revealChrome();
-                        const alreadySaved = liked;
-                        const isFirstSave = !alreadySaved && favouriteIds.length === 0;
-                        toggleFavourite(photo.id);
-                        showFeedback({
-                          title: alreadySaved ? 'Removed from saved' : 'Saved to your moments',
-                          message: alreadySaved
-                            ? 'This only changes your personal saved collection.'
-                            : isFirstSave
-                              ? 'Keep saving as you browse. Your collection stays private to you.'
-                              : 'This photo is now part of your personal saved collection.',
-                        });
-                      }}
+                      onToggleFavourite={handleToggleLike}
                       onAddToAlbum={() => {
                         revealChrome();
                         albumPicker.openPicker([photo.id]);
@@ -344,9 +598,22 @@ export default function PhotoViewer() {
 
                   <ViewerDetails
                     showDetails={showDetails}
-                    eventName={photo.event}
-                    date={photo.date}
+                    eventName={eventName}
+                    date={photo.date || eventDate}
                     people={photo.people}
+                  />
+
+                  <ViewerComments
+                    open={showDetails}
+                    commentsEnabled={commentsEnabled}
+                    comments={comments}
+                    loading={commentsLoading}
+                    submitting={submittingComment}
+                    draft={commentDraft}
+                    canSubmit={commentDraft.trim().length > 0}
+                    onDraftChange={setCommentDraft}
+                    onSubmit={handleSubmitComment}
+                    onDelete={handleDeleteComment}
                   />
                 </div>
               </div>
@@ -360,6 +627,7 @@ export default function PhotoViewer() {
         onClose={albumPicker.closePicker}
         photoCount={albumPicker.photoIds.length}
         albums={albumPicker.editableAlbums}
+        loading={albumPicker.loadingAlbums}
         selectedAlbumIds={albumPicker.selectedAlbumIds}
         showNewAlbumInput={albumPicker.showNewAlbumInput}
         newAlbumTitle={albumPicker.newAlbumTitle}
@@ -367,8 +635,8 @@ export default function PhotoViewer() {
         onToggleAlbum={albumPicker.toggleAlbum}
         onShowNewAlbumInput={() => albumPicker.setShowNewAlbumInput(true)}
         onNewAlbumTitleChange={albumPicker.setNewAlbumTitle}
-        onCreateAlbum={() => {
-          const createdAlbum = albumPicker.createNewAlbum();
+        onCreateAlbum={async () => {
+          const createdAlbum = await albumPicker.createNewAlbum();
           if (createdAlbum) {
             showFeedback({
               title: `Created "${createdAlbum.title}"`,
@@ -376,8 +644,8 @@ export default function PhotoViewer() {
             });
           }
         }}
-        onSubmit={() => {
-          const result = albumPicker.submitSelection();
+        onSubmit={async () => {
+          const result = await albumPicker.submitSelection();
           if (result) {
             showFeedback({
               title: 'Added to album',
