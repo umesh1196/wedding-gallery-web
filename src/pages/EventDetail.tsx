@@ -1,11 +1,11 @@
 import { motion } from 'motion/react';
 import { Link2 } from 'lucide-react';
-import { Link, Navigate, useParams } from 'react-router-dom';
-import { useEffect, useMemo, useState } from 'react';
+import { Navigate, useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { AlbumPickerSheet } from '../components/AlbumPickerSheet';
 import { EventGrid } from '../components/event/EventGrid';
-import { EventHero } from '../components/event/EventHero';
 import { SelectionBar } from '../components/event/SelectionBar';
+import { EventPageTabs } from '../components/Navigation';
 import type { Event, Photo } from '../lib/data';
 import { useViewerStore } from '../store/viewerStore';
 import { downloadPhoto } from '../lib/download';
@@ -22,7 +22,7 @@ export default function EventDetail() {
   const { id } = useParams<{ id: string }>();
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState<string[]>([]);
-  const albumPicker = useAlbumPicker(id);
+  const albumPicker = useAlbumPicker();
   const { showFeedback } = useFeedback();
   const { mode, galleryToken, studioSlug, weddingSlug } = useSessionStore();
   const [event, setEvent] = useState<Event | null>(null);
@@ -125,22 +125,8 @@ export default function EventDetail() {
     }
   };
 
-  const heroPhoto = useMemo(() => {
-    if (!eventPhotos.length) return null;
-
-    return (
-      eventPhotos.find(
-        (photo) => photo.url === event?.coverUrl || photo.thumbnailUrl === event?.coverUrl
-      ) ?? eventPhotos[0]
-    );
-  }, [event?.coverUrl, eventPhotos]);
-
   const editorial = event ? getEventEditorial(event.id) : null;
-  const gridPhotos = isSelecting
-    ? eventPhotos
-    : eventPhotos.length <= 1
-      ? eventPhotos
-      : eventPhotos.filter((photo) => photo.id !== heroPhoto?.id);
+  const gridPhotos = eventPhotos;
 
   if (mode !== 'guest' || !galleryToken || !studioSlug || !weddingSlug) {
     return <Navigate to="/" replace />;
@@ -154,7 +140,7 @@ export default function EventDetail() {
     );
   }
 
-  if (error || !event || !heroPhoto) {
+  if (error || !event) {
     return (
       <div className="wrap mobile-safe-top mobile-home-nav-spacer py-16">
         <p className="font-body text-sm text-foreground/62">
@@ -290,35 +276,31 @@ export default function EventDetail() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="min-h-screen pt-14 pb-24 md:pt-16 md:pb-16"
+      className="min-h-screen bg-[#f5efe4] pt-20 pb-24 text-[#241d17] md:pt-24 md:pb-16"
     >
       {!isSelecting && (
-        <>
-          {eventPhotos.length === 1 ? (
-            <Link
-              to={`/photo/${heroPhoto.id}?event=${encodeURIComponent(event.id)}`}
-              state={{ backTo: `/event/${event.id}`, backLabel: 'Photos', eventId: event.id }}
-              className="block"
-            >
-              <EventHero
-                event={event}
-                heroPhoto={heroPhoto}
-              />
-            </Link>
-          ) : (
-            <EventHero
-              event={event}
-              heroPhoto={heroPhoto}
-            />
-          )}
-
-          <div className="wrap pt-4 pb-2">
-            <div className="inline-flex items-center gap-2 rounded-full border border-foreground/8 bg-black/12 px-3 py-2 text-foreground/72 backdrop-blur-sm">
-              <Link2 className="h-4 w-4 text-rose-accent" />
-              <span className="label">{eventPhotos.length} moments · {editorial?.moodLabel ?? 'Quietly curated'}</span>
+        <section className="mx-auto w-full max-w-[1440px] px-4 pb-6 pt-8 sm:px-6 md:pb-8 md:pt-10 lg:px-10">
+          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="font-label text-[10px] uppercase tracking-[0.32em] text-[#9a907f]">
+                Edited photos
+              </p>
+              <h1 className="mt-2 font-headline text-[3.2rem] font-light leading-[0.92] tracking-[-0.04em] text-[#18130f] md:text-[4.8rem]">
+                {event.title}
+              </h1>
+              <p className="mt-3 max-w-2xl font-body text-lg leading-relaxed text-[#6f665b]">
+                These are the refined, story-led frames from {event.title.toLowerCase()}, presented in the same editorial sequence the studio intended.
+              </p>
+            </div>
+            <div className="inline-flex items-center gap-2 self-start rounded-full border border-[#d8cbb8] bg-[#f8f0e6] px-4 py-2 text-[#6b5646] shadow-[0_10px_30px_rgba(70,54,35,0.06)]">
+              <Link2 className="h-4 w-4 text-[#be3d2f]" />
+              <span className="label">
+                {eventPhotos.length} moments · {editorial?.moodLabel ?? 'Quietly curated'}
+              </span>
             </div>
           </div>
-        </>
+          <EventPageTabs eventId={event.id} />
+        </section>
       )}
 
       <SelectionBar
@@ -332,18 +314,20 @@ export default function EventDetail() {
         onAddToAlbum={() => albumPicker.openPicker(selectedPhotos)}
       />
 
-      <EventGrid
-        photos={gridPhotos}
-        isSelecting={isSelecting}
-        selectedPhotoIds={selectedPhotos}
-        eventId={id ?? ''}
-        isFavourite={isFavourite}
-        onToggleSelect={toggleSelect}
-        onLongPress={(photoId) => {
-          setIsSelecting(true);
-          toggleSelect(photoId);
-        }}
-      />
+      <div className="px-4 pb-2 sm:px-6 lg:px-10">
+        <EventGrid
+          photos={gridPhotos}
+          isSelecting={isSelecting}
+          selectedPhotoIds={selectedPhotos}
+          eventId={id ?? ''}
+          isFavourite={isFavourite}
+          onToggleSelect={toggleSelect}
+          onLongPress={(photoId) => {
+            setIsSelecting(true);
+            toggleSelect(photoId);
+          }}
+        />
+      </div>
 
       {nextCursor ? (
         <div className="wrap mt-6 flex justify-center pb-4">
@@ -351,7 +335,7 @@ export default function EventDetail() {
             type="button"
             onClick={loadMorePhotos}
             disabled={loadingMore}
-            className="label rounded-full border border-rose-accent/20 bg-white px-5 py-3 text-foreground transition hover:border-rose-accent/40 hover:bg-rose-accent/6 disabled:cursor-not-allowed disabled:opacity-60"
+            className="label rounded-full border border-[#d8cbb8] bg-[#f8f0e6] px-5 py-3 text-[#241d17] shadow-[0_10px_30px_rgba(70,54,35,0.06)] transition hover:border-[#cdbba4] hover:bg-[#f1e6d7] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loadingMore ? 'Loading more...' : 'Load more'}
           </button>
@@ -365,28 +349,14 @@ export default function EventDetail() {
         albums={albumPicker.editableAlbums}
         loading={albumPicker.loadingAlbums}
         selectedAlbumIds={albumPicker.selectedAlbumIds}
-        showNewAlbumInput={albumPicker.showNewAlbumInput}
-        newAlbumTitle={albumPicker.newAlbumTitle}
-        emptyMessage="Create a new album to save selected photos. Studio albums are view-only."
+        emptyMessage="No print albums are available yet. The studio can create them from the admin panel."
         onToggleAlbum={albumPicker.toggleAlbum}
-        onShowNewAlbumInput={() => albumPicker.setShowNewAlbumInput(true)}
-        onNewAlbumTitleChange={albumPicker.setNewAlbumTitle}
-        onCreateAlbum={async () => {
-          const result = await albumPicker.createAlbumAndSubmit();
-          if (result) {
-            showFeedback({
-              title: `Added ${result.photoCount} photo${result.photoCount !== 1 ? 's' : ''} to "${result.title}"`,
-              message: 'New album created and photos saved.',
-            });
-            exitSelectionMode();
-          }
-        }}
         onSubmit={async () => {
           const result = await albumPicker.submitSelection();
           if (result) {
             showFeedback({
               title: `Added ${result.photoCount} photo${result.photoCount !== 1 ? 's' : ''}`,
-              message: `Saved to ${result.albumCount} personal album${result.albumCount !== 1 ? 's' : ''}.`,
+              message: `Saved to ${result.albumCount} print album${result.albumCount !== 1 ? 's' : ''}.`,
             });
             exitSelectionMode();
           }

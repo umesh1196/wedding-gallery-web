@@ -4,6 +4,7 @@ import { cn } from '../../lib/utils';
 interface PersonSummary {
   name: string;
   count: number;
+  avatarUrl?: string | null;
 }
 
 interface PeopleStripProps {
@@ -34,7 +35,7 @@ export function PeopleStrip({
       </div>
 
       <div className="no-scrollbar -mx-1 flex gap-4 overflow-x-auto px-1 pb-2 md:flex-wrap md:gap-7 md:overflow-visible md:px-0">
-        {people.map(({ name, count }) => {
+        {people.map(({ name, count, avatarUrl }) => {
           const isSelected = selectedPerson === name;
 
           return (
@@ -52,12 +53,17 @@ export function PeopleStrip({
                 )}
               >
                 <div className="h-full w-full overflow-hidden rounded-full border border-foreground/8 bg-[#151515]">
-                  <img
-                    alt={name}
-                    className="h-full w-full rounded-full object-cover"
-                    src={`https://picsum.photos/seed/${name}/200/200`}
-                    referrerPolicy="no-referrer"
-                  />
+                  {avatarUrl ? (
+                    <img
+                      alt={name}
+                      className="h-full w-full rounded-full object-cover"
+                      src={avatarUrl}
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center rounded-full bg-foreground/10 text-foreground/40 text-lg font-bold">
+                      {name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
                 </div>
                 <div className="absolute -bottom-1 -right-1 rounded-full border border-surface bg-black/78 px-1.5 py-0.5 backdrop-blur-sm">
                   <span className={cn('text-[8px] font-label font-bold tracking-[0.18em]', isSelected ? 'text-rose-accent' : 'text-foreground/68')}>

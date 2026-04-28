@@ -1,52 +1,39 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useParams, Link, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, Share2, Trash2, X } from 'lucide-react';
-import { useViewerStore } from '../store/viewerStore';
+import { Link, Navigate, useParams } from 'react-router-dom';
+import { motion } from 'motion/react';
+import { ArrowLeft, Lock, Share2 } from 'lucide-react';
 import { useSessionStore } from '../store/sessionStore';
-import { Sheet } from '../components/Sheet';
-import { cn } from '../lib/utils';
 import { useFeedback } from '../components/FeedbackProvider';
-import { readRouteState, toBackState } from '../lib/navigation';
+import { downloadPhoto } from '../lib/download';
 import {
-  fetchGalleryAlbum,
-  fetchGalleryAlbumPhotos,
-  removePhotoFromGalleryAlbum,
-} from '../lib/api/albums';
+  fetchGuestPrintSelectionBucket,
+  fetchGuestPrintSelectionBucketPhotos,
+  removePhotoFromGuestPrintSelectionBucket,
+} from '../lib/api/printSelection';
 import { mapGalleryPhotoToPhoto } from '../lib/api/adapters';
 import type { Photo } from '../lib/data';
+import type { BackendPrintSelectionBucket } from '../lib/api/types';
 
 export default function AlbumDetail() {
-  const { id, albumId } = useParams<{ id: string; albumId: string }>();
-  const location = useLocation();
-  const { userAlbums, removePhotoFromAlbum } = useViewerStore();
-  const { galleryToken, mode, studioSlug, weddingSlug } = useSessionStore();
-  const [contextPhotoId, setContextPhotoId] = useState<string | null>(null);
-  const [showShareSheet, setShowShareSheet] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const { albumId, id } = useParams<{ albumId: string; id?: string }>();
+  const { mode, galleryToken, studioSlug, weddingSlug } = useSessionStore();
+  const { showFeedback } = useFeedback();
+  const [bucket, setBucket] = useState<BackendPrintSelectionBucket | null>(null);
+  const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [eventTitle, setEventTitle] = useState('');
-  const [albumTitle, setAlbumTitle] = useState('');
-  const [albumSlug, setAlbumSlug] = useState('');
-  const [albumPhotoCount, setAlbumPhotoCount] = useState(0);
-  const [photos, setPhotos] = useState<Photo[]>([]);
-  const { showFeedback } = useFeedback();
 
-  const userAlbum = userAlbums.find((a) => a.id === albumId);
-  const navigationState = readRouteState(location);
-  const backTo = navigationState?.backTo ?? `/event/${id}/albums`;
-  const backLabel = navigationState?.backLabel ?? 'Albums';
-  const detailState = navigationState ? toBackState(backTo, backLabel) : undefined;
+  const backTo = '/albums';
+  const backLabel = 'Print Albums';
 
   useEffect(() => {
     let active = true;
 
     async function load() {
-      if (mode !== 'guest' || !galleryToken || !studioSlug || !weddingSlug || !id || !albumId) {
+      if (mode !== 'guest' || !galleryToken || !studioSlug || !weddingSlug || !albumId) {
         if (!active) return;
-        setError('Open this album from the guest gallery.');
         setLoading(false);
+        setError('Open this print album from the guest gallery.');
         return;
       }
 
@@ -54,21 +41,17 @@ export default function AlbumDetail() {
       setError(null);
 
       try {
-        const [albumResponse, photosResponse] = await Promise.all([
-          fetchGalleryAlbum(studioSlug, weddingSlug, id, albumId, galleryToken),
-          fetchGalleryAlbumPhotos(studioSlug, weddingSlug, id, albumId, galleryToken, 100),
+        const [bucketResponse, photosResponse] = await Promise.all([
+          fetchGuestPrintSelectionBucket(studioSlug, weddingSlug, albumId, galleryToken),
+          fetchGuestPrintSelectionBucketPhotos(studioSlug, weddingSlug, albumId, galleryToken, 300),
         ]);
 
         if (!active) return;
-
-        setEventTitle(id.replace(/-/g, ' ').replace(/\b\w/g, (match) => match.toUpperCase()));
-        setAlbumTitle(albumResponse.data.name);
-        setAlbumSlug(albumResponse.data.slug);
-        setAlbumPhotoCount(albumResponse.data.photos_count ?? photosResponse.data.length);
+        setBucket(bucketResponse.data);
         setPhotos(photosResponse.data.map(mapGalleryPhotoToPhoto));
-      } catch {
+      } catch (loadError) {
         if (!active) return;
-        setError('Album details could not be loaded right now.');
+        setError(loadError instanceof Error ? loadError.message : 'Print album details could not be loaded right now.');
       } finally {
         if (active) setLoading(false);
       }
@@ -79,39 +62,44 @@ export default function AlbumDetail() {
     return () => {
       active = false;
     };
-  }, [albumId, galleryToken, id, mode, studioSlug, weddingSlug]);
+  }, [albumId, galleryToken, mode, studioSlug, weddingSlug]);
 
-  const albumPhotos = useMemo(() => photos, [photos]);
+  const groupedPhotos = useMemo(() => photos, [photos]);
 
-  const handleCopy = () => {
-    const url = window.location.href;
-    navigator.clipboard.writeText(url).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-      showFeedback({
-        title: 'Album link copied',
-        message: 'You can share this collection with family and friends.',
-        variant: 'info',
-      });
+  if (mode !== 'guest' || !galleryToken || !studioSlug || !weddingSlug) {
+    return <Navigate to="/" replace />;
+  }
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(window.location.href);
+    showFeedback({
+      title: 'Link copied',
+      message: 'You can share this print selection page with family.',
     });
   };
 
   const handleRemove = async (photoId: string) => {
-    if (!galleryToken || !studioSlug || !weddingSlug || !id || !albumSlug || !userAlbum) return;
+    if (!albumId || !bucket || bucket.locked) return;
 
     try {
-      await removePhotoFromGalleryAlbum(studioSlug, weddingSlug, id, albumSlug, photoId, galleryToken);
-      removePhotoFromAlbum(userAlbum.id, photoId);
+      const response = await removePhotoFromGuestPrintSelectionBucket(
+        studioSlug,
+        weddingSlug,
+        albumId,
+        photoId,
+        galleryToken
+      );
+
+      setBucket(response.data);
       setPhotos((current) => current.filter((photo) => photo.id !== photoId));
-      setAlbumPhotoCount((count) => Math.max(0, count - 1));
       showFeedback({
-        title: 'Removed from this album',
-        message: 'The photo still remains safely in the main gallery.',
+        title: 'Removed from print album',
+        message: 'The photo remains available in the main gallery.',
       });
-    } catch {
+    } catch (removeError) {
       showFeedback({
         title: 'Could not remove photo',
-        message: 'Please try again in a moment.',
+        message: removeError instanceof Error ? removeError.message : 'Please try again in a moment.',
         variant: 'info',
       });
     }
@@ -119,32 +107,20 @@ export default function AlbumDetail() {
 
   if (loading) {
     return (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="min-h-screen pt-14 pb-16 md:pt-16 md:pb-16">
-        <div className="wrap pt-6 md:pt-12">
-          <div className="soft-panel rounded-[1.8rem] p-6">
-            <p className="font-body text-sm text-foreground/62">Loading album...</p>
-          </div>
-        </div>
-      </motion.div>
+      <div className="min-h-screen bg-[#f5efe4] px-4 py-24 text-[#241d17] sm:px-6 lg:px-10">
+        <p className="font-body text-sm text-[#6f665b]">Loading print album…</p>
+      </div>
     );
   }
 
-  if (error) {
+  if (error || !bucket) {
     return (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="min-h-screen pt-14 pb-16 md:pt-16 md:pb-16">
-        <div className="wrap pt-6 md:pt-12">
-          <div className="soft-panel rounded-[1.8rem] p-6">
-            <Link
-              to={backTo}
-              state={detailState}
-              className="inline-flex items-center gap-1.5 label text-rose-accent hover:text-rose-accent/80 transition-colors mb-4"
-            >
-              <ArrowLeft className="w-4 h-4" /> {backLabel}
-            </Link>
-            <p className="font-body text-sm text-foreground/62">{error}</p>
-          </div>
-        </div>
-      </motion.div>
+      <div className="min-h-screen bg-[#f5efe4] px-4 py-24 text-[#241d17] sm:px-6 lg:px-10">
+        <Link to={backTo} className="inline-flex items-center gap-1.5 label text-[#be3d2f]">
+          <ArrowLeft className="h-4 w-4" /> {backLabel}
+        </Link>
+        <p className="mt-4 font-body text-sm text-[#964b40]">{error ?? 'Print album not found.'}</p>
+      </div>
     );
   }
 
@@ -153,151 +129,82 @@ export default function AlbumDetail() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="min-h-screen pt-14 pb-16 md:pt-16 md:pb-16"
+      className="min-h-screen bg-[#f5efe4] px-4 pb-20 pt-24 text-[#241d17] sm:px-6 lg:px-10"
     >
-      <div className="wrap pt-6 md:pt-12 pb-6 md:pb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <Link
-            to={backTo}
-            state={detailState}
-            className="inline-flex items-center gap-1.5 label text-rose-accent hover:text-rose-accent/80 transition-colors mb-4"
-          >
-            <ArrowLeft className="w-4 h-4" /> {backLabel}
-          </Link>
-          <h2 className="font-headline text-[2.5rem] md:text-5xl lg:text-6xl font-light text-foreground">{albumTitle || userAlbum?.title || 'Album'}</h2>
-          <p className="label text-outline mt-2">{albumPhotoCount} photos · {eventTitle}</p>
-          {userAlbum ? (
-            <p className="label text-outline/80 mt-2">Removing a photo here only takes it out of this collection.</p>
-          ) : null}
-        </div>
-        <button
-          onClick={() => setShowShareSheet(true)}
-          className="flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl bg-rose-accent px-5 py-3 text-white label font-bold hover:bg-rose-accent/90 transition-colors sm:w-auto"
-        >
-          Share album <Share2 className="w-4 h-4" />
-        </button>
-      </div>
+      <div className="mx-auto max-w-[1440px]">
+        <Link to={backTo} className="inline-flex items-center gap-1.5 label text-[#be3d2f]">
+          <ArrowLeft className="h-4 w-4" /> {backLabel}
+        </Link>
 
-      {albumPhotos.length === 0 ? (
-        <section className="wrap">
-          <div className="soft-panel rounded-[1.8rem] p-6">
-            <p className="font-body text-sm leading-relaxed text-foreground/62">
-              This album is ready, but no album photos are available in the current page state yet. Add photos from the chapter view and reopen the album in the same session.
+        <div className="mt-5 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="font-label text-[10px] uppercase tracking-[0.32em] text-[#9a907f]">
+              Wedding-wide selection
+            </p>
+            <h1 className="mt-2 font-headline text-[3rem] font-light leading-[0.92] tracking-[-0.04em] text-[#18130f] md:text-[4.4rem]">
+              {bucket.name}
+            </h1>
+            <p className="mt-3 max-w-2xl font-body text-lg leading-relaxed text-[#6f665b]">
+              {bucket.selected_count} selected out of {bucket.selection_limit}. This print album can gather moments from every chapter of the wedding.
             </p>
           </div>
-        </section>
-      ) : (
-        <section className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-[2px] md:gap-1">
-          {albumPhotos.map((photo) => (
-            <div
-              key={photo.id}
-              className="relative aspect-square overflow-hidden"
-              onContextMenu={(e) => {
-                e.preventDefault();
-                setContextPhotoId(photo.id);
-              }}
-            >
-              <img
-                alt={photo.alt}
-                className="w-full h-full object-cover photo-grade"
-                src={photo.url}
-                referrerPolicy="no-referrer"
-              />
-              {userAlbum ? (
-                <button
-                  onClick={() => void handleRemove(photo.id)}
-                  className="absolute right-2 top-2 z-20 inline-flex items-center gap-1.5 rounded-full border border-foreground/12 bg-black/60 px-3 py-2 text-rose-accent shadow-lg backdrop-blur-xl transition-colors hover:bg-black/72"
-                  aria-label={`Remove ${photo.alt} from album`}
-                >
-                  <Trash2 className="h-4 w-4" />
-                  <span className="hidden label text-rose-accent sm:inline">Remove</span>
-                </button>
-              ) : null}
-              <AnimatePresence>
-                {contextPhotoId === photo.id && userAlbum && (
-                  <>
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      onClick={() => setContextPhotoId(null)}
-                      className="fixed inset-0 z-[60]"
-                    />
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
-                      className="absolute top-2 right-2 z-[70] bg-surface/95 backdrop-blur-xl border border-foreground/10 rounded-lg overflow-hidden shadow-xl"
-                    >
-                      <button
-                        onClick={() => {
-                          void handleRemove(photo.id);
-                          setContextPhotoId(null);
-                        }}
-                        className="flex items-center gap-2 px-4 py-3 text-rose-accent label whitespace-nowrap"
-                      >
-                        <Trash2 className="w-4 h-4" /> Remove from album
-                      </button>
-                    </motion.div>
-                  </>
-                )}
-              </AnimatePresence>
-            </div>
-          ))}
-        </section>
-      )}
-
-      <Sheet open={showShareSheet} onClose={() => setShowShareSheet(false)}>
-        <div className="overflow-y-auto px-6 pt-6 pb-4 md:px-8 md:pt-8">
-          <div className="mb-5 flex items-start justify-between gap-4">
-            <div>
-              <h3 className="font-headline text-2xl md:text-3xl text-foreground font-light mb-1">{albumTitle || userAlbum?.title || 'Album'}</h3>
-              <p className="label text-outline">{albumPhotos.length} photos to share</p>
+          <div className="flex flex-wrap gap-3">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#d8cbb8] bg-[#f8f0e6] px-4 py-2 text-[#6b5646] shadow-[0_10px_30px_rgba(70,54,35,0.06)]">
+              {bucket.locked ? <Lock className="h-4 w-4 text-[#be3d2f]" /> : null}
+              <span className="label">
+                {bucket.locked ? 'Locked by studio' : `${bucket.remaining_count} remaining`}
+              </span>
             </div>
             <button
-              onClick={() => setShowShareSheet(false)}
-              className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full transition-colors hover:bg-foreground/5"
-              aria-label="Close"
+              onClick={handleCopy}
+              className="inline-flex items-center gap-2 rounded-full border border-[#d8cbb8] bg-[#f8f0e6] px-4 py-2 text-[#6b5646] shadow-[0_10px_30px_rgba(70,54,35,0.06)]"
             >
-              <X className="h-5 w-5 text-outline" />
+              <Share2 className="h-4 w-4 text-[#be3d2f]" />
+              <span className="label">Share</span>
             </button>
           </div>
-
-          <div className="no-scrollbar mb-6 flex gap-2 overflow-x-auto pb-1">
-            {albumPhotos.slice(0, 5).map((p) => (
-              <img
-                key={p.id}
-                src={p.thumbnailUrl ?? p.url}
-                className="w-12 h-12 md:w-14 md:h-14 object-cover flex-shrink-0 rounded"
-                referrerPolicy="no-referrer"
-                alt={p.alt}
-              />
-            ))}
-            {albumPhotos.length > 5 && (
-              <div className="w-12 h-12 md:w-14 md:h-14 bg-foreground/5 flex-shrink-0 flex items-center justify-center rounded">
-                <span className="label text-outline">+{albumPhotos.length - 5}</span>
-              </div>
-            )}
-          </div>
-
-          <div className="flex items-center gap-3 bg-foreground/5 border border-foreground/10 px-4 py-3 mb-4 rounded">
-            <span className="flex-1 font-mono text-[11px] text-outline truncate">{window.location.origin}/event/{id}/albums/{albumId}</span>
-            <button onClick={handleCopy} className="label text-rose-accent whitespace-nowrap hover:text-rose-accent/80 transition-colors">
-              {copied ? 'Copied!' : 'Copy'}
-            </button>
-          </div>
-
-          <button
-            onClick={handleCopy}
-            className={cn(
-              'w-full h-[48px] flex items-center justify-center gap-2 label font-bold mb-3 rounded transition-colors',
-              copied ? 'bg-green-700 text-white' : 'bg-rose-accent text-white hover:bg-rose-accent/90'
-            )}
-          >
-            {copied ? '✓ Link Copied' : 'Copy Link'}
-          </button>
         </div>
-      </Sheet>
+
+        {groupedPhotos.length === 0 ? (
+          <div className="mt-10 rounded-[1.75rem] border border-dashed border-[#d8cbb8] bg-[#fbf6ee] px-6 py-8">
+            <p className="font-body text-sm leading-relaxed text-[#6f665b]">
+              No photos have been added to this print album yet.
+            </p>
+          </div>
+        ) : (
+          <section className="mt-10 grid grid-cols-2 gap-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            {groupedPhotos.map((photo) => (
+              <div key={photo.id} className="group relative aspect-[0.92] overflow-hidden rounded-[1.2rem] bg-[#efe4d5]">
+                <img
+                  src={photo.url}
+                  alt={photo.alt}
+                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  referrerPolicy="no-referrer"
+                />
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(245,239,228,0.05),rgba(36,29,23,0.56))]" />
+                <div className="absolute inset-x-0 bottom-0 p-3">
+                  <p className="label text-white/70">{photo.event ? photo.event.replace(/-/g, ' ') : id || 'Wedding'}</p>
+                </div>
+                {!bucket.locked ? (
+                  <button
+                    onClick={() => void handleRemove(photo.id)}
+                    aria-label={`Remove ${photo.alt} from print album`}
+                    className="absolute right-3 top-3 rounded-full border border-white/18 bg-black/45 px-3 py-1.5 label text-white/90 backdrop-blur-md transition-colors hover:bg-black/60"
+                  >
+                    Remove
+                  </button>
+                ) : null}
+                <button
+                  onClick={() => downloadPhoto(photo.url, photo.alt)}
+                  className="absolute left-3 top-3 rounded-full border border-white/18 bg-black/35 px-3 py-1.5 label text-white/90 backdrop-blur-md transition-colors hover:bg-black/50"
+                >
+                  View
+                </button>
+              </div>
+            ))}
+          </section>
+        )}
+      </div>
     </motion.div>
   );
 }

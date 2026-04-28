@@ -5,6 +5,8 @@ export interface Photo {
   alt: string;
   event: string;   // matches Event.id (e.g. 'ceremony', not 'The Ceremony')
   date: string;
+  width?: number;
+  height?: number;
   people?: string[];
   isHighlight?: boolean;
 }

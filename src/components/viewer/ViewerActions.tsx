@@ -49,7 +49,7 @@ export function ViewerActions({
       <button
         onClick={onAddToAlbum}
         className="flex h-9 w-9 items-center justify-center rounded-full text-foreground/68 transition-colors hover:bg-foreground/8 hover:text-foreground"
-        aria-label="Add photo to album"
+        aria-label="Add photo to print album"
       >
         <Plus className="h-5 w-5" />
       </button>

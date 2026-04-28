@@ -58,6 +58,8 @@ describe('Home guest access', () => {
       </MemoryRouter>
     );
 
+    fireEvent.click(screen.getByRole('button', { name: /private gallery/i }));
+
     fireEvent.change(screen.getByLabelText(/studio slug/i), {
       target: { value: 'mppf-photography' },
     });

@@ -122,7 +122,7 @@ export function PersonPhotoGrid({
                       <button
                         onClick={() => onAddToAlbum(photo.id)}
                         className="flex h-9 w-9 items-center justify-center rounded-full bg-foreground/6 text-foreground/72 transition-colors hover:bg-foreground/10 hover:text-foreground"
-                        aria-label="Add photo to album"
+                        aria-label="Add photo to print album"
                       >
                         <Plus className="h-4 w-4" />
                       </button>

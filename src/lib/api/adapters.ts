@@ -47,7 +47,9 @@ export function mapGalleryPhotoToPhoto(photo: BackendGalleryPhoto): Photo {
     alt: fallbackLabel,
     event: ceremonySlug,
     date: formatDate(photo.captured_at),
-    people: [],
+    width: photo.width ?? undefined,
+    height: photo.height ?? undefined,
+    people: photo.people?.map((p) => p.label) ?? [],
     isHighlight: false,
   };
 }

@@ -14,6 +14,40 @@ interface EventGridProps {
   onLongPress?: (photoId: string) => void;
 }
 
+function getAspectVariant(photo: Photo) {
+  if (photo.width && photo.height) {
+    if (photo.height >= photo.width * 1.18) return 'portrait';
+    if (photo.width >= photo.height * 1.18) return 'landscape';
+  }
+
+  return 'square';
+}
+
+function getMosaicSpanClass(photo: Photo, index: number) {
+  const variant = getAspectVariant(photo);
+  const patterns = {
+    portrait: [
+      'col-span-1 row-span-3 md:col-span-2 md:row-span-4 lg:col-span-2 lg:row-span-4',
+      'col-span-1 row-span-4 md:col-span-2 md:row-span-5 lg:col-span-2 lg:row-span-5',
+      'col-span-1 row-span-3 md:col-span-2 md:row-span-4 lg:col-span-2 lg:row-span-4',
+    ],
+    landscape: [
+      'col-span-1 row-span-2 md:col-span-3 md:row-span-3 lg:col-span-4 lg:row-span-3',
+      'col-span-2 row-span-2 md:col-span-4 md:row-span-3 lg:col-span-4 lg:row-span-3',
+      'col-span-1 row-span-2 md:col-span-3 md:row-span-2 lg:col-span-3 lg:row-span-2',
+    ],
+    square: [
+      'col-span-1 row-span-2 md:col-span-2 md:row-span-3 lg:col-span-2 lg:row-span-3',
+      'col-span-1 row-span-2 md:col-span-2 md:row-span-2 lg:col-span-2 lg:row-span-2',
+      'col-span-2 row-span-2 md:col-span-3 md:row-span-3 lg:col-span-3 lg:row-span-3',
+      'col-span-1 row-span-3 md:col-span-2 md:row-span-4 lg:col-span-2 lg:row-span-4',
+    ],
+  } as const;
+
+  const sequence = patterns[variant];
+  return sequence[index % sequence.length];
+}
+
 export function EventGrid({
   photos,
   isSelecting,
@@ -58,15 +92,18 @@ export function EventGrid({
   return (
     <section
       className={cn(
-        'columns-2 gap-[3px] md:columns-3 lg:columns-4',
+        'grid grid-flow-dense grid-cols-2 auto-rows-[88px] gap-[3px] md:grid-cols-6 md:auto-rows-[92px] lg:grid-cols-8 lg:auto-rows-[110px]',
         isSelecting && 'mt-2'
       )}
     >
-      {photos.map((photo) => (
+      {photos.map((photo, index) => (
         <div
           key={photo.id}
           style={{ WebkitTouchCallout: 'none' } as React.CSSProperties}
-          className="relative mb-[3px] break-inside-avoid overflow-hidden select-none touch-manipulation"
+          className={cn(
+            'relative overflow-hidden rounded-[1.1rem] bg-[#eadfce] select-none touch-manipulation md:rounded-[1.35rem]',
+            getMosaicSpanClass(photo, index)
+          )}
           onPointerDown={(e) => handlePointerDown(e, photo.id)}
           onPointerMove={handlePointerMove}
           onPointerUp={cancelTimer}
@@ -79,12 +116,12 @@ export function EventGrid({
           onClick={() => isSelecting && onToggleSelect(photo.id)}
         >
           {isSelecting ? (
-            <div className="relative cursor-pointer">
+            <div className="relative h-full cursor-pointer">
               <img
                 alt={photo.alt}
                 draggable={false}
                 className={cn(
-                  'block w-full h-auto transition-all duration-200 pointer-events-none',
+                  'block h-full w-full object-cover transition-all duration-200 pointer-events-none',
                   selectedPhotoIds.includes(photo.id)
                     ? 'brightness-[0.88] saturate-[1.05]'
                     : 'brightness-[0.72] saturate-[0.88]'
@@ -114,7 +151,7 @@ export function EventGrid({
             <Link
               to={`/photo/${photo.id}?event=${encodeURIComponent(eventId)}`}
               state={{ backTo: `/event/${eventId}`, backLabel: 'Photos', eventId }}
-              className="block"
+              className="group block h-full"
               onClick={(e) => {
                 if (longPressBlocked.current) {
                   e.preventDefault();
@@ -125,10 +162,11 @@ export function EventGrid({
               <img
                 alt={photo.alt}
                 draggable={false}
-                className="block w-full h-auto photo-grade pointer-events-none"
+                className="block h-full w-full bg-[#eadfce] object-cover photo-grade pointer-events-none transition-transform duration-700 group-hover:scale-[1.035]"
                 src={getGridImageSrc(photo)}
                 referrerPolicy="no-referrer"
               />
+              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,249,241,0.02),rgba(40,29,20,0.08)_72%,rgba(40,29,20,0.18))] opacity-90 transition-opacity duration-300 group-hover:opacity-70" />
               {isFavourite(photo.id) && (
                 <div className="absolute bottom-1.5 right-1.5">
                   <Heart className="h-3.5 w-3.5 fill-current text-rose-accent drop-shadow-md" />

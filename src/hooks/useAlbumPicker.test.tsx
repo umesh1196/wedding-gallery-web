@@ -19,7 +19,7 @@ describe('useAlbumPicker', () => {
     });
   });
 
-  it('loads albums and adds selected photos to an existing album', async () => {
+  it('loads print albums and adds selected photos to an existing bucket', async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce({
@@ -29,12 +29,13 @@ describe('useAlbumPicker', () => {
           success: true,
           data: [
             {
-              id: 'album-1',
-              slug: 'our-picks',
-              name: 'Our Picks',
-              album_type: 'user_created',
-              visibility: 'private',
-              photos_count: 1,
+              id: 'bucket-1',
+              slug: 'bride-side-album',
+              name: 'Bride Side Album',
+              selected_count: 1,
+              selection_limit: 10,
+              remaining_count: 9,
+              locked: false,
             },
           ],
         }),
@@ -45,12 +46,13 @@ describe('useAlbumPicker', () => {
         json: async () => ({
           success: true,
           data: {
-            id: 'album-1',
-            slug: 'our-picks',
-            name: 'Our Picks',
-            album_type: 'user_created',
-            visibility: 'private',
-            photos_count: 2,
+            id: 'bucket-1',
+            slug: 'bride-side-album',
+            name: 'Bride Side Album',
+            selected_count: 2,
+            selection_limit: 10,
+            remaining_count: 8,
+            locked: false,
           },
         }),
       })
@@ -61,12 +63,13 @@ describe('useAlbumPicker', () => {
           success: true,
           data: [
             {
-              id: 'album-1',
-              slug: 'our-picks',
-              name: 'Our Picks',
-              album_type: 'user_created',
-              visibility: 'private',
-              photos_count: 2,
+              id: 'bucket-1',
+              slug: 'bride-side-album',
+              name: 'Bride Side Album',
+              selected_count: 2,
+              selection_limit: 10,
+              remaining_count: 8,
+              locked: false,
             },
           ],
         }),
@@ -74,7 +77,7 @@ describe('useAlbumPicker', () => {
 
     vi.stubGlobal('fetch', fetchMock);
 
-    const { result } = renderHook(() => useAlbumPicker('engagement'));
+    const { result } = renderHook(() => useAlbumPicker());
 
     await waitFor(() => {
       expect(result.current.editableAlbums).toHaveLength(1);
@@ -82,7 +85,7 @@ describe('useAlbumPicker', () => {
 
     act(() => {
       result.current.openPicker(['photo-1']);
-      result.current.toggleAlbum('album-1');
+      result.current.toggleAlbum('bucket-1');
     });
 
     await act(async () => {
@@ -90,7 +93,7 @@ describe('useAlbumPicker', () => {
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://127.0.0.1:3000/api/v1/g/mppf-photography/umesh-and-shruti/ceremonies/engagement/albums/our-picks/photos',
+      'http://127.0.0.1:3000/api/v1/g/mppf-photography/umesh-and-shruti/print_selection_buckets/bride-side-album/photos',
       expect.objectContaining({
         method: 'POST',
         headers: expect.any(Headers),

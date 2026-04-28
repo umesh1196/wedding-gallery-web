@@ -16,14 +16,32 @@ import {
   reorderCeremonies,
   retryPhotoImport,
   retryPhotoProcessing,
+  retryPhotoFaceRecognition,
+  triggerWeddingFaceRecognition,
   setPhotoCover,
   uploadCeremonyCover,
   updateStudio,
   updateCeremony,
   updateWedding,
 } from '../../lib/api/admin';
+import {
+  createAdminPrintSelectionBucket,
+  deleteAdminPrintSelectionBucket,
+  fetchAdminPrintSelectionBucket,
+  fetchAdminPrintSelectionBucketPhotos,
+  fetchAdminPrintSelectionBuckets,
+  lockAdminPrintSelectionBucket,
+  unlockAdminPrintSelectionBucket,
+  updateAdminPrintSelectionBucket,
+} from '../../lib/api/printSelection';
 import { useFeedback } from '../../components/FeedbackProvider';
-import type { BackendAdminPhoto, BackendCeremony, BackendWedding } from '../../lib/api/types';
+import type {
+  BackendAdminPhoto,
+  BackendCeremony,
+  BackendGalleryPhoto,
+  BackendPrintSelectionBucket,
+  BackendWedding,
+} from '../../lib/api/types';
 
 function toDateTimeLocalValue(value?: string | null) {
   if (!value) return '';
@@ -65,6 +83,16 @@ export default function AdminDashboard() {
   const [editWeddingPassword, setEditWeddingPassword] = useState('');
   const [editAllowDownload, setEditAllowDownload] = useState('shortlist');
   const [editAllowComments, setEditAllowComments] = useState(true);
+  const [printBuckets, setPrintBuckets] = useState<BackendPrintSelectionBucket[]>([]);
+  const [printBucketsLoading, setPrintBucketsLoading] = useState(false);
+  const [printBucketName, setPrintBucketName] = useState('');
+  const [printBucketLimit, setPrintBucketLimit] = useState('120');
+  const [selectedPrintBucketSlug, setSelectedPrintBucketSlug] = useState<string | null>(null);
+  const [selectedPrintBucket, setSelectedPrintBucket] = useState<BackendPrintSelectionBucket | null>(null);
+  const [selectedPrintBucketPhotos, setSelectedPrintBucketPhotos] = useState<BackendGalleryPhoto[]>([]);
+  const [selectedPrintBucketLoading, setSelectedPrintBucketLoading] = useState(false);
+  const [editPrintBucketName, setEditPrintBucketName] = useState('');
+  const [editPrintBucketLimit, setEditPrintBucketLimit] = useState('');
   const [ceremonies, setCeremonies] = useState<BackendCeremony[]>([]);
   const [ceremoniesLoading, setCeremoniesLoading] = useState(false);
   const [ceremonyName, setCeremonyName] = useState('');
@@ -153,6 +181,71 @@ export default function AdminDashboard() {
   useEffect(() => {
     let active = true;
 
+    if (!studioJwt || !selectedWeddingSlug) {
+      setPrintBuckets([]);
+      setSelectedPrintBucket(null);
+      setSelectedPrintBucketPhotos([]);
+      return;
+    }
+
+    setPrintBucketsLoading(true);
+
+    fetchAdminPrintSelectionBuckets(studioJwt, selectedWeddingSlug)
+      .then((response) => {
+        if (!active) return;
+        setPrintBuckets(response.data);
+      })
+      .catch((err) => {
+        if (!active) return;
+        setError(err instanceof Error ? err.message : 'Unable to load print albums right now.');
+      })
+      .finally(() => {
+        if (!active) return;
+        setPrintBucketsLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [selectedWeddingSlug, setError, studioJwt]);
+
+  useEffect(() => {
+    let active = true;
+
+    if (!studioJwt || !selectedWeddingSlug || !selectedPrintBucketSlug) {
+      setSelectedPrintBucket(null);
+      setSelectedPrintBucketPhotos([]);
+      return;
+    }
+
+    setSelectedPrintBucketLoading(true);
+
+    Promise.all([
+      fetchAdminPrintSelectionBucket(studioJwt, selectedWeddingSlug, selectedPrintBucketSlug),
+      fetchAdminPrintSelectionBucketPhotos(studioJwt, selectedWeddingSlug, selectedPrintBucketSlug),
+    ])
+      .then(([bucketResponse, photosResponse]) => {
+        if (!active) return;
+        setSelectedPrintBucket(bucketResponse.data);
+        setSelectedPrintBucketPhotos(photosResponse.data);
+      })
+      .catch((err) => {
+        if (!active) return;
+        setError(err instanceof Error ? err.message : 'Unable to load print album details right now.');
+      })
+      .finally(() => {
+        if (!active) return;
+        setSelectedPrintBucketLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [selectedPrintBucketSlug, selectedWeddingSlug, setError, studioJwt]);
+
+  useEffect(() => {
+    let active = true;
+
     if (!studioJwt || !selectedWeddingSlug || !selectedCeremonySlug) {
       setSelectedCeremony(null);
       setPhotos([]);
@@ -220,6 +313,13 @@ export default function AdminDashboard() {
     setEditAllowDownload(selectedWedding?.allow_download || 'shortlist');
     setEditAllowComments(selectedWedding?.allow_comments ?? true);
   }, [selectedWedding]);
+
+  useEffect(() => {
+    setEditPrintBucketName(selectedPrintBucket?.name || '');
+    setEditPrintBucketLimit(
+      selectedPrintBucket ? String(selectedPrintBucket.selection_limit) : ''
+    );
+  }, [selectedPrintBucket]);
 
   async function handleStudioSettingsSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -312,6 +412,129 @@ export default function AdminDashboard() {
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to update the wedding right now.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleCreatePrintBucket(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!studioJwt || !selectedWeddingSlug) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await createAdminPrintSelectionBucket(studioJwt, selectedWeddingSlug, {
+        name: printBucketName,
+        selection_limit: Number(printBucketLimit) || 0,
+      });
+
+      setPrintBuckets((current) => [...current, response.data]);
+      setPrintBucketName('');
+      setPrintBucketLimit('120');
+
+      showFeedback({
+        title: 'Print album created',
+        message: `${response.data.name} is ready for client selections.`,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to create the print album right now.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleUpdatePrintBucket(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!studioJwt || !selectedWeddingSlug || !selectedPrintBucket) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await updateAdminPrintSelectionBucket(
+        studioJwt,
+        selectedWeddingSlug,
+        selectedPrintBucket.slug,
+        {
+          name: editPrintBucketName,
+          selection_limit: Number(editPrintBucketLimit) || 0,
+        }
+      );
+
+      setSelectedPrintBucket(response.data);
+      setPrintBuckets((current) =>
+        current.map((bucket) => (bucket.id === response.data.id ? response.data : bucket))
+      );
+
+      showFeedback({
+        title: 'Print album updated',
+        message: `${response.data.name} is synced with the backend.`,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to update the print album right now.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleTogglePrintBucketLock() {
+    if (!studioJwt || !selectedWeddingSlug || !selectedPrintBucket) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = selectedPrintBucket.locked
+        ? await unlockAdminPrintSelectionBucket(
+            studioJwt,
+            selectedWeddingSlug,
+            selectedPrintBucket.slug
+          )
+        : await lockAdminPrintSelectionBucket(
+            studioJwt,
+            selectedWeddingSlug,
+            selectedPrintBucket.slug
+          );
+
+      setSelectedPrintBucket(response.data);
+      setPrintBuckets((current) =>
+        current.map((bucket) => (bucket.id === response.data.id ? response.data : bucket))
+      );
+
+      showFeedback({
+        title: response.data.locked ? 'Print album locked' : 'Print album unlocked',
+        message: response.data.locked
+          ? 'Clients can view selections but cannot edit them now.'
+          : 'Clients can keep curating this print album.',
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to update the print album lock right now.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleDeletePrintBucket() {
+    if (!studioJwt || !selectedWeddingSlug || !selectedPrintBucket) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      await deleteAdminPrintSelectionBucket(studioJwt, selectedWeddingSlug, selectedPrintBucket.slug);
+      setPrintBuckets((current) => current.filter((bucket) => bucket.id !== selectedPrintBucket.id));
+      setSelectedPrintBucket(null);
+      setSelectedPrintBucketSlug(null);
+      setSelectedPrintBucketPhotos([]);
+
+      showFeedback({
+        title: 'Print album deleted',
+        message: 'The empty bucket was removed from this wedding.',
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to delete the print album right now.');
     } finally {
       setLoading(false);
     }
@@ -596,6 +819,45 @@ export default function AdminDashboard() {
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to retry photo processing right now.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleRunFaceRecognition() {
+    if (!studioJwt || !selectedWeddingSlug) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await triggerWeddingFaceRecognition(studioJwt, selectedWeddingSlug);
+      showFeedback({
+        title: 'Face recognition queued',
+        message: `${response.data.pending_count} photo${response.data.pending_count !== 1 ? 's' : ''} queued for face recognition.`,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to trigger face recognition right now.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleRetryPhotoFaceRecognition(photoId: string) {
+    if (!studioJwt) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await retryPhotoFaceRecognition(studioJwt, photoId);
+      setPhotos((current) => current.map((photo) => (photo.id === response.data.id ? response.data : photo)));
+      showFeedback({
+        title: 'Face recognition retry queued',
+        message: `${response.data.original_filename} is queued for face recognition again.`,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to retry face recognition right now.');
     } finally {
       setLoading(false);
     }
@@ -1017,11 +1279,231 @@ export default function AdminDashboard() {
                   >
                     {loading ? 'Saving...' : 'Save Wedding Changes'}
                   </button>
+                  <button
+                    className="rounded-full border border-foreground/10 bg-black/16 px-5 py-3 font-label text-xs uppercase tracking-[0.18rem] text-foreground/78 transition hover:bg-black/20 disabled:cursor-not-allowed disabled:opacity-60"
+                    disabled={loading || !selectedWeddingSlug}
+                    onClick={handleRunFaceRecognition}
+                    type="button"
+                  >
+                    Run Face Recognition
+                  </button>
                   <span className="label text-foreground/48">
                     Chapter management is the next step after this detail form.
                   </span>
                 </div>
               </form>
+            )}
+          </section>
+        </div>
+
+        <div className="mt-8 grid gap-4 lg:grid-cols-[minmax(18rem,0.9fr)_minmax(0,1.1fr)]">
+          <section className="soft-panel rounded-[1.75rem] p-6 md:p-7">
+            <p className="label text-outline">Create Print Album</p>
+            <h2 className="mt-3 font-headline text-[2rem] font-light text-foreground md:text-[2.5rem]">
+              Prepare wedding-wide print selections.
+            </h2>
+            <p className="mt-3 max-w-xl font-body text-sm leading-relaxed text-foreground/70">
+              These are hard-limit curation buckets for the final printed album. Clients can add photos from any chapter until you lock the selection.
+            </p>
+
+            <form className="mt-7 grid gap-4" onSubmit={handleCreatePrintBucket}>
+              <label className="block">
+                <span className="label text-foreground/60">Print Album Name</span>
+                <input
+                  aria-label="Print Album Name"
+                  className="mt-2 w-full rounded-[1.15rem] border border-foreground/10 bg-black/14 px-4 py-3 text-base text-foreground outline-none transition focus:border-rose-accent/40"
+                  value={printBucketName}
+                  onChange={(event) => setPrintBucketName(event.target.value)}
+                  placeholder="Bride Side Album"
+                  required
+                />
+              </label>
+
+              <label className="block">
+                <span className="label text-foreground/60">Selection Limit</span>
+                <input
+                  aria-label="Selection Limit"
+                  className="mt-2 w-full rounded-[1.15rem] border border-foreground/10 bg-black/14 px-4 py-3 text-base text-foreground outline-none transition focus:border-rose-accent/40"
+                  type="number"
+                  min="0"
+                  value={printBucketLimit}
+                  onChange={(event) => setPrintBucketLimit(event.target.value)}
+                  required
+                />
+              </label>
+
+              <button
+                className="rounded-full border border-rose-accent/30 bg-rose-accent px-5 py-3 font-label text-xs uppercase tracking-[0.18rem] text-white transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={loading || !selectedWeddingSlug}
+                type="submit"
+              >
+                {loading ? 'Creating...' : 'Create Print Album'}
+              </button>
+            </form>
+          </section>
+
+          <section className="soft-panel rounded-[1.75rem] p-6 md:p-7">
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <p className="label text-outline">Print Albums</p>
+                <h2 className="mt-3 font-headline text-[2rem] font-light text-foreground md:text-[2.5rem]">
+                  {selectedWedding ? `${selectedWedding.couple_name} print selections` : 'Select a wedding first'}
+                </h2>
+              </div>
+              <span className="label text-foreground/48">
+                {printBucketsLoading ? 'Loading...' : `${printBuckets.length} total`}
+              </span>
+            </div>
+
+            <div className="mt-6 flex flex-col gap-3">
+              {printBuckets.map((bucket) => (
+                <article
+                  key={bucket.id}
+                  className="rounded-[1.35rem] border border-foreground/10 bg-black/12 px-4 py-4"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h3 className="font-headline text-[1.5rem] font-light text-foreground">
+                        {bucket.name}
+                      </h3>
+                      <p className="mt-2 font-body text-sm text-foreground/60">
+                        {bucket.selected_count} selected · {bucket.selection_limit} max
+                      </p>
+                    </div>
+                    <span className="label text-rose-accent">
+                      {bucket.locked ? 'Locked' : `${bucket.remaining_count} left`}
+                    </span>
+                  </div>
+                  <div className="mt-4">
+                    <button
+                      className="rounded-full border border-foreground/10 bg-black/16 px-4 py-2 font-label text-[10px] uppercase tracking-[0.16rem] text-foreground/72"
+                      onClick={() => setSelectedPrintBucketSlug(bucket.slug)}
+                      type="button"
+                    >
+                      Manage Print Album
+                    </button>
+                  </div>
+                </article>
+              ))}
+
+              {!selectedWeddingSlug && (
+                <div className="rounded-[1.35rem] border border-dashed border-foreground/12 px-4 py-6 text-sm text-foreground/58">
+                  Choose a wedding from above to load its print albums.
+                </div>
+              )}
+
+              {selectedWeddingSlug && !printBucketsLoading && printBuckets.length === 0 && (
+                <div className="rounded-[1.35rem] border border-dashed border-foreground/12 px-4 py-6 text-sm text-foreground/58">
+                  No print albums yet. Create the first one from the panel on the left.
+                </div>
+              )}
+            </div>
+          </section>
+        </div>
+
+        <div className="mt-8">
+          <section className="soft-panel rounded-[1.75rem] p-6 md:p-7">
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <p className="label text-outline">Print Album Details</p>
+                <h2 className="mt-3 font-headline text-[2rem] font-light text-foreground md:text-[2.5rem]">
+                  {selectedPrintBucket ? selectedPrintBucket.name : 'Select a print album to manage'}
+                </h2>
+              </div>
+              <span className="label text-foreground/48">
+                {selectedPrintBucketLoading ? 'Loading...' : selectedPrintBucket?.slug || 'No selection'}
+              </span>
+            </div>
+
+            {!selectedPrintBucket && !selectedPrintBucketLoading && (
+              <div className="mt-6 rounded-[1.35rem] border border-dashed border-foreground/12 px-4 py-6 text-sm text-foreground/58">
+                Pick a print album from the list above to edit its name, adjust its limit, or lock it for clients.
+              </div>
+            )}
+
+            {selectedPrintBucket && (
+              <div className="mt-7 grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(18rem,0.85fr)]">
+                <form className="grid gap-4 md:grid-cols-2" onSubmit={handleUpdatePrintBucket}>
+                  <label className="block md:col-span-2">
+                    <span className="label text-foreground/60">Edit Print Album Name</span>
+                    <input
+                      aria-label="Edit Print Album Name"
+                      className="mt-2 w-full rounded-[1.15rem] border border-foreground/10 bg-black/14 px-4 py-3 text-base text-foreground outline-none transition focus:border-rose-accent/40"
+                      value={editPrintBucketName}
+                      onChange={(event) => setEditPrintBucketName(event.target.value)}
+                      required
+                    />
+                  </label>
+
+                  <label className="block">
+                    <span className="label text-foreground/60">Selection Limit</span>
+                    <input
+                      aria-label="Edit Print Album Limit"
+                      className="mt-2 w-full rounded-[1.15rem] border border-foreground/10 bg-black/14 px-4 py-3 text-base text-foreground outline-none transition focus:border-rose-accent/40"
+                      type="number"
+                      min="0"
+                      value={editPrintBucketLimit}
+                      onChange={(event) => setEditPrintBucketLimit(event.target.value)}
+                      required
+                    />
+                  </label>
+
+                  <div className="rounded-[1.15rem] border border-foreground/10 bg-black/10 px-4 py-3">
+                    <p className="label text-foreground/60">Current selection</p>
+                    <p className="mt-2 font-body text-sm text-foreground/76">
+                      {selectedPrintBucket.selected_count} selected · {selectedPrintBucket.remaining_count} remaining
+                    </p>
+                    <p className="mt-2 font-body text-xs text-foreground/56">
+                      Lowering the limit won’t remove existing picks. It only blocks further additions until the count fits again.
+                    </p>
+                  </div>
+
+                  <div className="md:col-span-2 flex flex-wrap gap-3 pt-2">
+                    <button
+                      className="rounded-full border border-rose-accent/30 bg-rose-accent px-5 py-3 font-label text-xs uppercase tracking-[0.18rem] text-white transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
+                      disabled={loading}
+                      type="submit"
+                    >
+                      {loading ? 'Saving...' : 'Save Print Album'}
+                    </button>
+                    <button
+                      className="rounded-full border border-foreground/10 bg-black/16 px-5 py-3 font-label text-xs uppercase tracking-[0.18rem] text-foreground/78 transition hover:bg-black/20 disabled:cursor-not-allowed disabled:opacity-60"
+                      disabled={loading}
+                      onClick={handleTogglePrintBucketLock}
+                      type="button"
+                    >
+                      {selectedPrintBucket.locked ? 'Unlock for Clients' : 'Lock for Clients'}
+                    </button>
+                    <button
+                      className="rounded-full border border-foreground/10 bg-transparent px-5 py-3 font-label text-xs uppercase tracking-[0.18rem] text-foreground/58 transition hover:border-rose-accent/30 hover:text-rose-accent disabled:cursor-not-allowed disabled:opacity-60"
+                      disabled={loading || selectedPrintBucket.selected_count > 0}
+                      onClick={handleDeletePrintBucket}
+                      type="button"
+                    >
+                      Delete Empty Bucket
+                    </button>
+                  </div>
+                </form>
+
+                <aside className="rounded-[1.35rem] border border-foreground/10 bg-black/12 p-5">
+                  <p className="label text-outline">Selected Photos</p>
+                  <p className="mt-2 font-body text-sm text-foreground/70">
+                    {selectedPrintBucketPhotos.length} photo{selectedPrintBucketPhotos.length !== 1 ? 's' : ''} currently assigned.
+                  </p>
+                  <div className="mt-4 grid grid-cols-3 gap-2">
+                    {selectedPrintBucketPhotos.slice(0, 6).map((photo) => (
+                      <div key={photo.id} className="aspect-square overflow-hidden rounded-[0.9rem] bg-black/14">
+                        <img
+                          src={photo.thumbnail_url || photo.preview_url || photo.full_url || ''}
+                          alt={photo.original_filename || 'Selected photo'}
+                          className="h-full w-full object-cover"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </aside>
+              </div>
             )}
           </section>
         </div>
@@ -1342,7 +1824,11 @@ export default function AdminDashboard() {
                       </p>
                     </div>
                     <span className="label text-rose-accent">
-                      {photo.is_cover ? 'Cover Photo' : photo.processing_status || photo.ingestion_status || 'pending'}
+                      {photo.is_cover
+                        ? 'Cover Photo'
+                        : photo.processing_status === 'ready' && photo.face_recognition_status
+                        ? `faces: ${photo.face_recognition_status}`
+                        : photo.processing_status || photo.ingestion_status || 'pending'}
                     </span>
                   </div>
                   <div className="mt-4 flex flex-wrap gap-3">
@@ -1384,6 +1870,17 @@ export default function AdminDashboard() {
                         type="button"
                       >
                         Retry Processing
+                      </button>
+                    )}
+                    {photo.face_recognition_status === 'failed' && (
+                      <button
+                        aria-label={`Retry face recognition for ${photo.original_filename}`}
+                        className="rounded-full border border-foreground/10 bg-black/16 px-4 py-2 font-label text-[10px] uppercase tracking-[0.16rem] text-foreground/72 disabled:opacity-50"
+                        disabled={loading}
+                        onClick={() => handleRetryPhotoFaceRecognition(photo.id)}
+                        type="button"
+                      >
+                        Retry Face Recognition
                       </button>
                     )}
                     <button

@@ -264,3 +264,17 @@ export function deletePhoto(token: string, photoId: string) {
     token,
   });
 }
+
+export function triggerWeddingFaceRecognition(token: string, weddingSlug: string) {
+  return apiRequest<ApiEnvelope<{ queued: boolean; pending_count: number }>>(
+    `/api/v1/weddings/${weddingSlug}/run_face_recognition`,
+    { method: 'POST', token }
+  );
+}
+
+export function retryPhotoFaceRecognition(token: string, photoId: string) {
+  return apiRequest<ApiEnvelope<BackendAdminPhoto>>(
+    `/api/v1/photos/${photoId}/retry_face_recognition`,
+    { method: 'POST', token }
+  );
+}

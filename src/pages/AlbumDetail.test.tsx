@@ -4,7 +4,6 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import AlbumDetail from './AlbumDetail';
 import { FeedbackProvider } from '../components/FeedbackProvider';
 import { useSessionStore } from '../store/sessionStore';
-import { useViewerStore } from '../store/viewerStore';
 
 describe('AlbumDetail', () => {
   beforeEach(() => {
@@ -20,20 +19,6 @@ describe('AlbumDetail', () => {
       loading: false,
       error: null,
     });
-    useViewerStore.setState({
-      favouriteIds: [],
-      userAlbums: [
-        {
-          id: 'album-1',
-          slug: 'family',
-          title: 'Family',
-          eventId: 'engagement',
-          photoIds: ['photo-1'],
-          photoCount: 1,
-          createdAt: new Date().toISOString(),
-        },
-      ],
-    });
   });
 
   it('loads album detail and photos from the guest backend', async () => {
@@ -48,8 +33,10 @@ describe('AlbumDetail', () => {
             id: 'album-1',
             slug: 'family',
             name: 'Family',
-            photos_count: 1,
-            album_type: 'user_created',
+            selected_count: 1,
+            selection_limit: 40,
+            remaining_count: 39,
+            locked: false,
           },
         }),
       })
@@ -86,7 +73,7 @@ describe('AlbumDetail', () => {
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith(
-        'http://127.0.0.1:3000/api/v1/g/mppf-photography/umesh-and-shruti/ceremonies/engagement/albums/album-1',
+        'http://127.0.0.1:3000/api/v1/g/mppf-photography/umesh-and-shruti/print_selection_buckets/album-1',
         expect.objectContaining({
           method: 'GET',
           headers: expect.any(Headers),
@@ -96,7 +83,7 @@ describe('AlbumDetail', () => {
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith(
-        'http://127.0.0.1:3000/api/v1/g/mppf-photography/umesh-and-shruti/ceremonies/engagement/albums/album-1/photos?limit=100',
+        'http://127.0.0.1:3000/api/v1/g/mppf-photography/umesh-and-shruti/print_selection_buckets/album-1/photos?limit=300',
         expect.objectContaining({
           method: 'GET',
           headers: expect.any(Headers),
@@ -117,8 +104,10 @@ describe('AlbumDetail', () => {
             id: 'album-1',
             slug: 'family',
             name: 'Family',
-            photos_count: 1,
-            album_type: 'user_created',
+            selected_count: 1,
+            selection_limit: 40,
+            remaining_count: 39,
+            locked: false,
           },
         }),
       })
@@ -146,8 +135,10 @@ describe('AlbumDetail', () => {
             id: 'album-1',
             slug: 'family',
             name: 'Family',
-            photos_count: 0,
-            album_type: 'user_created',
+            selected_count: 0,
+            selection_limit: 40,
+            remaining_count: 40,
+            locked: false,
           },
         }),
       });
@@ -166,11 +157,11 @@ describe('AlbumDetail', () => {
 
     expect(await screen.findByAltText('family-1.jpg')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /remove family-1.jpg from album/i }));
+    fireEvent.click(screen.getByRole('button', { name: /remove family-1.jpg from print album/i }));
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith(
-        'http://127.0.0.1:3000/api/v1/g/mppf-photography/umesh-and-shruti/ceremonies/engagement/albums/family/photos/photo-1',
+        'http://127.0.0.1:3000/api/v1/g/mppf-photography/umesh-and-shruti/print_selection_buckets/album-1/photos/photo-1',
         expect.objectContaining({
           method: 'DELETE',
           headers: expect.any(Headers),

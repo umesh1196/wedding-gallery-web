@@ -57,6 +57,20 @@ export interface BackendGalleryPhoto {
   comment_count?: number | null;
   is_liked?: boolean;
   is_shortlisted?: boolean;
+  people?: Array<{ id: string; label: string }>;
+}
+
+export interface BackendPerson {
+  id: string;
+  label: string;
+  avatar_url?: string | null;
+  photo_count: number;
+  is_known: boolean;
+}
+
+export interface BackendFaceSearchResult {
+  photo_ids: string[];
+  person: { id: string; label: string; avatar_url?: string | null } | null;
 }
 
 export interface BackendGalleryPhotoState {
@@ -81,6 +95,19 @@ export interface BackendAlbum {
   visibility?: string | null;
   photos_count: number;
   cover_photo_id?: string | null;
+}
+
+export interface BackendPrintSelectionBucket {
+  id: string;
+  name: string;
+  slug: string;
+  selection_limit: number;
+  selected_count: number;
+  remaining_count: number;
+  locked: boolean;
+  locked_at?: string | null;
+  cover_photo_url?: string | null;
+  last_updated_at?: string | null;
 }
 
 export interface BackendGalleryBranding {
@@ -110,6 +137,8 @@ export interface BackendAdminPhoto {
   is_cover?: boolean | null;
   processing_status?: string | null;
   ingestion_status?: string | null;
+  face_recognition_status?: string | null;
+  face_recognition_error?: string | null;
   thumbnail_url?: string | null;
   preview_url?: string | null;
   full_url?: string | null;

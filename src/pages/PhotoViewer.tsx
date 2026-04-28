@@ -72,7 +72,7 @@ export default function PhotoViewer() {
   const backTo = navigationState?.backTo ?? (photo ? `/event/${photo.event}` : '/events');
   const backLabel = navigationState?.backLabel ?? 'Photos';
   const photoState = navigationState ? toBackState(backTo, backLabel) : undefined;
-  const albumPicker = useAlbumPicker(photo?.event ?? eventId ?? undefined);
+  const albumPicker = useAlbumPicker();
 
   useEffect(() => {
     let active = true;
@@ -629,27 +629,14 @@ export default function PhotoViewer() {
         albums={albumPicker.editableAlbums}
         loading={albumPicker.loadingAlbums}
         selectedAlbumIds={albumPicker.selectedAlbumIds}
-        showNewAlbumInput={albumPicker.showNewAlbumInput}
-        newAlbumTitle={albumPicker.newAlbumTitle}
-        emptyMessage="Create a new album to save this photo. Studio albums are view-only."
+        emptyMessage="No print albums are available yet. The studio can create them from the admin panel."
         onToggleAlbum={albumPicker.toggleAlbum}
-        onShowNewAlbumInput={() => albumPicker.setShowNewAlbumInput(true)}
-        onNewAlbumTitleChange={albumPicker.setNewAlbumTitle}
-        onCreateAlbum={async () => {
-          const createdAlbum = await albumPicker.createNewAlbum();
-          if (createdAlbum) {
-            showFeedback({
-              title: `Created "${createdAlbum.title}"`,
-              message: 'This photo can be added right away.',
-            });
-          }
-        }}
         onSubmit={async () => {
           const result = await albumPicker.submitSelection();
           if (result) {
             showFeedback({
-              title: 'Added to album',
-              message: `Saved to ${result.albumCount} album${result.albumCount !== 1 ? 's' : ''}.`,
+              title: 'Added to print album',
+              message: `Saved to ${result.albumCount} print album${result.albumCount !== 1 ? 's' : ''}.`,
             });
             revealChrome();
           }

@@ -1,4 +1,4 @@
-import { Plus, X } from 'lucide-react';
+import { Lock, Plus, X } from 'lucide-react';
 import type { PickerAlbum } from '../hooks/useAlbumPicker';
 import { cn } from '../lib/utils';
 import { Sheet } from './Sheet';
@@ -10,13 +10,8 @@ interface AlbumPickerSheetProps {
   albums: PickerAlbum[];
   loading?: boolean;
   selectedAlbumIds: string[];
-  showNewAlbumInput: boolean;
-  newAlbumTitle: string;
   emptyMessage: string;
   onToggleAlbum: (albumId: string) => void;
-  onShowNewAlbumInput: () => void;
-  onNewAlbumTitleChange: (value: string) => void;
-  onCreateAlbum: () => void | Promise<void>;
   onSubmit: () => void | Promise<void>;
 }
 
@@ -27,13 +22,8 @@ export function AlbumPickerSheet({
   albums,
   loading = false,
   selectedAlbumIds,
-  showNewAlbumInput,
-  newAlbumTitle,
   emptyMessage,
   onToggleAlbum,
-  onShowNewAlbumInput,
-  onNewAlbumTitleChange,
-  onCreateAlbum,
   onSubmit,
 }: AlbumPickerSheetProps) {
   return (
@@ -41,10 +31,10 @@ export function AlbumPickerSheet({
       <div className="flex items-center justify-between px-6 pt-6 pb-5 md:px-8 md:pt-8">
         <div>
           <h2 className="font-headline text-xl italic font-light tracking-tight text-foreground md:text-2xl">
-            Add {photoCount === 1 ? 'photo' : `${photoCount} photos`} to...
+            Add {photoCount === 1 ? 'photo' : `${photoCount} photos`} to print album
           </h2>
           <p className="mt-2 max-w-sm font-body text-xs leading-relaxed text-foreground/56 md:text-sm">
-            Choose one of your personal albums below. Studio albums stay read-only so the original curation remains untouched.
+            Choose one of the print albums prepared for this wedding. Each one has a hard selection limit and can span moments from every chapter.
           </p>
         </div>
         <button
@@ -56,63 +46,62 @@ export function AlbumPickerSheet({
       </div>
 
       <div className="flex-1 overflow-y-auto px-6 md:px-8">
-        {showNewAlbumInput ? (
-          <div className="mb-6 flex items-center gap-3">
-            <input
-              autoFocus
-              value={newAlbumTitle}
-              onChange={(event) => onNewAlbumTitleChange(event.target.value)}
-              onKeyDown={(event) => event.key === 'Enter' && onCreateAlbum()}
-              placeholder="Album name..."
-              className="flex-1 rounded border border-foreground/10 bg-foreground/5 px-4 py-3 text-foreground label uppercase tracking-widest outline-none placeholder:text-foreground/20"
-            />
-            <button
-              onClick={onCreateAlbum}
-              className="rounded bg-rose-accent px-4 py-3 text-white label transition-colors hover:bg-rose-accent/90"
-            >
-              Create
-            </button>
-          </div>
-        ) : (
-          <button
-            onClick={onShowNewAlbumInput}
-            className="mb-6 flex min-h-[56px] w-full items-center rounded border border-dashed border-rose-accent/40 px-5 transition-colors hover:bg-foreground/5"
-          >
-            <Plus className="mr-3 h-5 w-5 text-rose-accent" />
-            <span className="label font-bold text-rose-accent">Create a personal album</span>
-          </button>
-        )}
-
         <div className="space-y-3 pb-6">
           {albums.map((album) => {
             const isChecked = selectedAlbumIds.includes(album.id);
+            const disabled = album.locked || album.full;
 
             return (
               <button
                 key={album.id}
-                onClick={() => onToggleAlbum(album.id)}
-                className="flex h-[60px] w-full items-center justify-between rounded px-1 py-2 transition-colors hover:bg-foreground/3"
+                onClick={() => !disabled && onToggleAlbum(album.id)}
+                className={cn(
+                  'flex min-h-[76px] w-full items-center justify-between rounded-[1.1rem] border px-4 py-3 text-left transition-colors',
+                  disabled
+                    ? 'cursor-not-allowed border-foreground/8 bg-foreground/[0.02] opacity-70'
+                    : 'border-foreground/8 bg-foreground/[0.03] hover:bg-foreground/[0.05]',
+                  isChecked && !disabled && 'border-rose-accent/40 bg-rose-accent/8'
+                )}
               >
-                <div className="flex items-center gap-4">
+                <div className="flex items-start gap-4">
                   <div
                     className={cn(
-                      'flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-sm border transition-colors',
+                      'mt-1 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-sm border transition-colors',
                       isChecked ? 'border-rose-accent bg-rose-accent' : 'border-foreground/20'
                     )}
                   >
                     {isChecked && (
-                      <svg className="h-3 w-3 text-foreground" viewBox="0 0 12 12" fill="none">
+                      <svg className="h-3 w-3 text-white" viewBox="0 0 12 12" fill="none">
                         <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     )}
                   </div>
-                    <div className="text-left">
-                      <p className="font-headline text-lg leading-tight text-foreground">{album.title}</p>
-                      <p className="label text-outline">{album.photoCount} photos</p>
-                    </div>
+                  <div>
+                    <p className="font-headline text-lg leading-tight text-foreground">{album.title}</p>
+                    <p className="mt-1 label text-outline">
+                      {album.photoCount} selected · {album.selectionLimit} max
+                    </p>
+                    <p className="mt-1 font-body text-xs text-foreground/60">
+                      {album.locked
+                        ? 'Locked by studio'
+                        : album.full
+                          ? 'Selection limit reached'
+                          : `${album.remainingCount} remaining`}
+                    </p>
                   </div>
-                <div className="flex h-10 w-10 items-center justify-center rounded border border-foreground/10 bg-foreground/5">
-                  <Plus className="h-4 w-4 text-foreground/20" />
+                </div>
+                <div className="flex items-center gap-2">
+                  {album.locked ? (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-foreground/10 px-3 py-1.5">
+                      <Lock className="h-3.5 w-3.5 text-outline" />
+                      <span className="label text-outline">Locked</span>
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-foreground/10 bg-white/60 px-3 py-1.5">
+                      <Plus className="h-3.5 w-3.5 text-rose-accent" />
+                      <span className="label text-foreground/70">{album.remainingCount}</span>
+                    </span>
+                  )}
                 </div>
               </button>
             );
@@ -126,7 +115,7 @@ export function AlbumPickerSheet({
 
           {loading && (
             <div className="rounded border border-foreground/6 bg-foreground/[0.02] px-4 py-4">
-              <p className="font-body text-sm text-outline">Loading your albums…</p>
+              <p className="font-body text-sm text-outline">Loading print albums…</p>
             </div>
           )}
         </div>
@@ -142,8 +131,8 @@ export function AlbumPickerSheet({
           )}
         >
           {selectedAlbumIds.length > 0
-            ? `Add to ${selectedAlbumIds.length} Personal Album${selectedAlbumIds.length > 1 ? 's' : ''}`
-            : 'Choose a personal album'}
+            ? `Add to ${selectedAlbumIds.length} Print Album${selectedAlbumIds.length > 1 ? 's' : ''}`
+            : 'Choose a print album'}
         </button>
       </div>
     </Sheet>

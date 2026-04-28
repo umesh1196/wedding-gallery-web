@@ -1,9 +1,9 @@
 import { useParams, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Camera, Upload, X } from 'lucide-react';
-import { PHOTOS, EVENTS, type Photo } from '../lib/data';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useViewerStore } from '../store/viewerStore';
+import { useSessionStore } from '../store/sessionStore';
 import { AlbumPickerSheet } from '../components/AlbumPickerSheet';
 import { Sheet } from '../components/Sheet';
 import { useAlbumPicker } from '../hooks/useAlbumPicker';
@@ -11,6 +11,11 @@ import { useFeedback } from '../components/FeedbackProvider';
 import { PeopleStrip } from '../components/people/PeopleStrip';
 import { SelectedPersonHero } from '../components/people/SelectedPersonHero';
 import { PersonPhotoGrid } from '../components/people/PersonPhotoGrid';
+import { EventPageTabs } from '../components/Navigation';
+import { fetchPeople, fetchPersonPhotos, searchFaces } from '../lib/api/people';
+import { mapGalleryPhotoToPhoto } from '../lib/api/adapters';
+import type { Photo } from '../lib/data';
+import type { BackendPerson } from '../lib/api/types';
 
 export default function EventPeople() {
   const { id } = useParams<{ id: string }>();
@@ -20,34 +25,50 @@ export default function EventPeople() {
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState<string[]>([]);
   const [showFindSheet, setShowFindSheet] = useState(false);
-  const albumPicker = useAlbumPicker(id);
+  const [people, setPeople] = useState<BackendPerson[]>([]);
+  const [personPhotos, setPersonPhotos] = useState<Photo[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const libraryInputRef = useRef<HTMLInputElement>(null);
+
+  const albumPicker = useAlbumPicker();
   const { showFeedback } = useFeedback();
+  const { toggleFavourite, savePhotos, isFavourite } = useViewerStore();
+  const { studioSlug, weddingSlug, galleryToken } = useSessionStore();
 
-  const {
-    toggleFavourite,
-    savePhotos,
-    isFavourite,
-  } = useViewerStore();
-
-  const event = EVENTS.find((e) => e.id === id);
-  const eventPhotos = PHOTOS.filter((p) => p.event === id);
   const selectedPerson = searchParams.get('person');
   const peopleBasePath = id ? `/event/${id}/people` : '/events';
   const peopleViewPath = selectedPerson
     ? `${peopleBasePath}?person=${encodeURIComponent(selectedPerson)}`
     : peopleBasePath;
 
-  const peopleMap = new Map<string, number>();
-  eventPhotos.forEach((photo) => {
-    photo.people?.forEach((person) => {
-      peopleMap.set(person, (peopleMap.get(person) ?? 0) + 1);
-    });
-  });
+  // Load people list
+  useEffect(() => {
+    if (!studioSlug || !weddingSlug || !galleryToken) return;
+    fetchPeople(studioSlug, weddingSlug, galleryToken)
+      .then((res) => setPeople(res.data))
+      .catch(() => setPeople([]));
+  }, [studioSlug, weddingSlug, galleryToken]);
 
-  const people = Array.from(peopleMap.entries()).map(([name, count]) => ({ name, count }));
-  const filteredPhotos = selectedPerson
-    ? eventPhotos.filter((p) => p.people?.includes(selectedPerson))
-    : eventPhotos;
+  // Load photos for selected person
+  useEffect(() => {
+    if (!selectedPerson || !studioSlug || !weddingSlug || !galleryToken) {
+      setPersonPhotos([]);
+      return;
+    }
+    const person = people.find((p) => p.label === selectedPerson);
+    if (!person) return;
+
+    fetchPersonPhotos(studioSlug, weddingSlug, person.id, galleryToken)
+      .then((res) => setPersonPhotos(res.data.map(mapGalleryPhotoToPhoto)))
+      .catch(() => setPersonPhotos([]));
+  }, [selectedPerson, people, studioSlug, weddingSlug, galleryToken]);
+
+  const peopleForStrip = people.map((p) => ({
+    name: p.label,
+    count: p.photo_count,
+    avatarUrl: p.avatar_url,
+  }));
 
   const resetSelectionState = () => {
     setIsSelecting(false);
@@ -61,16 +82,15 @@ export default function EventPeople() {
 
   const toggleSelect = (photoId: string) =>
     setSelectedPhotos((prev) =>
-      prev.includes(photoId) ? prev.filter((id) => id !== photoId) : [...prev, photoId]
+      prev.includes(photoId) ? prev.filter((pid) => pid !== photoId) : [...prev, photoId]
     );
 
   const toggleSelectAllFiltered = () => {
-    if (selectedPhotos.length === filteredPhotos.length) {
+    if (selectedPhotos.length === personPhotos.length) {
       setSelectedPhotos([]);
       return;
     }
-
-    setSelectedPhotos(filteredPhotos.map((photo) => photo.id));
+    setSelectedPhotos(personPhotos.map((photo) => photo.id));
   };
 
   const handleTogglePerson = (name: string) => {
@@ -90,6 +110,39 @@ export default function EventPeople() {
     });
   };
 
+  const handleSelfieSelected = async (file: File) => {
+    if (!studioSlug || !weddingSlug || !galleryToken) return;
+    setShowFindSheet(false);
+    setSearchLoading(true);
+    try {
+      const res = await searchFaces(studioSlug, weddingSlug, file, galleryToken);
+      const result = res.data;
+      if (result.person) {
+        showFeedback({
+          title: `Found you! ${result.photo_ids.length} photo${result.photo_ids.length !== 1 ? 's' : ''} found`,
+          message: `Showing photos for ${result.person.label}`,
+        });
+        navigate(`${peopleBasePath}?person=${encodeURIComponent(result.person.label)}`, {
+          state: location.state,
+        });
+      } else if (result.photo_ids.length > 0) {
+        showFeedback({
+          title: `${result.photo_ids.length} matching photo${result.photo_ids.length !== 1 ? 's' : ''} found`,
+          message: 'Your face was matched in the gallery.',
+        });
+      } else {
+        showFeedback({
+          title: 'No matches found',
+          message: 'Try a clearer photo with your face visible.',
+        });
+      }
+    } catch {
+      showFeedback({ title: 'Search failed', message: 'Please try again.' });
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -98,12 +151,13 @@ export default function EventPeople() {
       className="min-h-screen pt-14 pb-20 md:pt-16 md:pb-16"
     >
       <section className="wrap page-header">
-        <p className="mb-1 label text-outline">{event?.title || 'Event'}</p>
-        <h2 className="font-headline text-[2.5rem] font-light text-foreground md:text-5xl lg:text-6xl">People</h2>
+        <p className="mb-1 label text-outline">People</p>
+        <h2 className="font-headline text-[2.5rem] font-light text-foreground md:text-5xl lg:text-6xl">Faces</h2>
+        {id ? <EventPageTabs eventId={id} /> : null}
       </section>
 
       <PeopleStrip
-        people={people}
+        people={peopleForStrip}
         selectedPerson={selectedPerson}
         onSelectPerson={handleTogglePerson}
         onOpenFindSheet={() => setShowFindSheet(true)}
@@ -113,14 +167,14 @@ export default function EventPeople() {
         <>
           <SelectedPersonHero
             selectedPerson={selectedPerson}
-            photoCount={filteredPhotos.length}
+            photoCount={personPhotos.length}
             isSelecting={isSelecting}
             selectedCount={selectedPhotos.length}
-            allSelected={filteredPhotos.length > 0 && selectedPhotos.length === filteredPhotos.length}
+            allSelected={personPhotos.length > 0 && selectedPhotos.length === personPhotos.length}
             onSaveAll={() => {
-              savePhotos(filteredPhotos.map((photo) => photo.id));
+              savePhotos(personPhotos.map((photo) => photo.id));
               showFeedback({
-                title: `${filteredPhotos.length} photo${filteredPhotos.length !== 1 ? 's' : ''} saved`,
+                title: `${personPhotos.length} photo${personPhotos.length !== 1 ? 's' : ''} saved`,
                 message: `${selectedPerson}'s matching photos were added to your collection.`,
               });
             }}
@@ -138,7 +192,7 @@ export default function EventPeople() {
           />
 
           <PersonPhotoGrid
-            photos={filteredPhotos}
+            photos={personPhotos}
             isSelecting={isSelecting}
             selectedPhotos={selectedPhotos}
             peopleViewPath={peopleViewPath}
@@ -158,31 +212,42 @@ export default function EventPeople() {
         albums={albumPicker.editableAlbums}
         loading={albumPicker.loadingAlbums}
         selectedAlbumIds={albumPicker.selectedAlbumIds}
-        showNewAlbumInput={albumPicker.showNewAlbumInput}
-        newAlbumTitle={albumPicker.newAlbumTitle}
-        emptyMessage="Create a new album to save these photos. Studio albums are view-only."
+        emptyMessage="No print albums are available yet. The studio can create them from the admin panel."
         onToggleAlbum={albumPicker.toggleAlbum}
-        onShowNewAlbumInput={() => albumPicker.setShowNewAlbumInput(true)}
-        onNewAlbumTitleChange={albumPicker.setNewAlbumTitle}
-        onCreateAlbum={async () => {
-          const result = await albumPicker.createAlbumAndSubmit();
-          if (result) {
-            showFeedback({
-              title: `Added ${result.photoCount} photo${result.photoCount !== 1 ? 's' : ''} to "${result.title}"`,
-              message: 'New album created and photos saved.',
-            });
-            resetSelectionState();
-          }
-        }}
         onSubmit={async () => {
           const result = await albumPicker.submitSelection();
           if (result) {
             showFeedback({
               title: `Added ${result.photoCount} photo${result.photoCount !== 1 ? 's' : ''}`,
-              message: `Saved to ${result.albumCount} album${result.albumCount !== 1 ? 's' : ''}.`,
+              message: `Saved to ${result.albumCount} print album${result.albumCount !== 1 ? 's' : ''}.`,
             });
             resetSelectionState();
           }
+        }}
+      />
+
+      {/* Hidden file inputs for selfie capture */}
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="user"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleSelfieSelected(file);
+          e.target.value = '';
+        }}
+      />
+      <input
+        ref={libraryInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleSelfieSelected(file);
+          e.target.value = '';
         }}
       />
 
@@ -208,11 +273,19 @@ export default function EventPeople() {
           </p>
 
           <div className="grid gap-3 pb-2">
-            <button className="flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-rose-accent px-5 py-3 text-white label font-bold transition-colors hover:bg-rose-accent/90">
+            <button
+              disabled={searchLoading}
+              onClick={() => cameraInputRef.current?.click()}
+              className="flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-rose-accent px-5 py-3 text-white label font-bold transition-colors hover:bg-rose-accent/90 disabled:opacity-50"
+            >
               <Camera className="h-4 w-4" />
-              Open Camera
+              {searchLoading ? 'Searching…' : 'Open Camera'}
             </button>
-            <button className="flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-foreground/10 bg-foreground/5 px-5 py-3 text-foreground/88 label transition-colors hover:bg-foreground/8">
+            <button
+              disabled={searchLoading}
+              onClick={() => libraryInputRef.current?.click()}
+              className="flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-foreground/10 bg-foreground/5 px-5 py-3 text-foreground/88 label transition-colors hover:bg-foreground/8 disabled:opacity-50"
+            >
               <Upload className="h-4 w-4" />
               Upload from Library
             </button>

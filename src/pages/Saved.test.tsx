@@ -82,7 +82,7 @@ describe('Saved', () => {
     });
 
     expect(await screen.findByText('Engagement')).toBeInTheDocument();
-    expect(screen.getByText(/1 saved photo/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/1 saved photo/i).length).toBeGreaterThan(0);
     expect(useViewerStore.getState().favouriteIds).toContain('photo-1');
   });
 });

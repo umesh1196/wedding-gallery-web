@@ -9,6 +9,7 @@ import { useSessionStore } from '../store/sessionStore';
 import { useViewerStore } from '../store/viewerStore';
 import { useFeedback } from '../components/FeedbackProvider';
 import { isHomeLevelBackTarget, readRouteState, toBackState } from '../lib/navigation';
+import { EventPageTabs } from '../components/Navigation';
 
 interface BackendBackedAlbumCard {
   id: string;
@@ -266,6 +267,7 @@ export default function EventAlbums() {
             ) : null}
           </div>
         </div>
+        {id ? <EventPageTabs eventId={id} /> : null}
       </section>
 
       <section className="wrap pb-6 md:pb-10">

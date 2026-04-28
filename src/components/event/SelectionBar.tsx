@@ -1,4 +1,3 @@
-import { AnimatePresence, motion } from 'motion/react';
 import { ArrowLeft, Check, CheckCheck, Download, Heart, Plus, X } from 'lucide-react';
 
 interface SelectionBarProps {
@@ -23,44 +22,33 @@ export function SelectionBar({
   onAddToAlbum,
 }: SelectionBarProps) {
   return (
-    <>
-      {open && (
-        <div className="wrap flex items-center justify-between py-4">
-          <button
-            onClick={onExit}
-            className="flex items-center gap-2 text-foreground/60 transition-colors hover:text-foreground"
-            aria-label="Back from selection mode"
-          >
-            <ArrowLeft className="h-5 w-5" />
-            <span className="label">Back</span>
-          </button>
-          <span className="label text-foreground">{selectedCount} chosen</span>
-          <div className="w-6" />
-        </div>
-      )}
+    open ? (
+      <div className="sticky top-16 z-40 px-4 pb-3 pt-3 sm:px-6 lg:px-10 md:top-16">
+        <div className="mx-auto max-w-[1440px]">
+          <div className="rounded-[1.25rem] border border-[#d8cbb8] bg-[#f8f0e6]/95 px-3 py-3 shadow-[0_18px_40px_rgba(70,54,35,0.12)] backdrop-blur-xl md:px-4">
+            <div className="flex flex-wrap items-center gap-2 md:gap-3">
+              <button
+                onClick={onExit}
+                className="inline-flex h-10 items-center gap-2 rounded-full border border-[#d8cbb8] bg-white/70 px-3 text-[#6b5646] transition-colors hover:bg-white"
+                aria-label="Back from selection mode"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                <span className="label">Back</span>
+              </button>
 
-      <AnimatePresence>
-        {open && selectedCount > 0 && (
-          <motion.div
-            initial={{ y: 80, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 80, opacity: 0 }}
-            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="mobile-safe-bottom fixed inset-x-0 bottom-0 z-[60] px-3 pb-2 md:bottom-8 md:left-1/2 md:right-auto md:w-auto md:min-w-[440px] md:-translate-x-1/2 md:px-0 md:pb-0"
-          >
-            <div className="mx-auto max-w-2xl rounded-[1rem] border border-foreground/8 bg-black/24 px-3 pb-1.5 pt-2.5 backdrop-blur-xl md:rounded-xl md:bg-surface-container/62 md:px-4 md:py-3 md:shadow-2xl">
-              <div className="mb-2 flex items-center gap-2">
+              <div className="inline-flex items-center gap-2 rounded-full border border-[#d8cbb8] bg-white/55 px-3 py-2">
                 <div className="flex h-4 w-4 items-center justify-center rounded-full bg-[#1a73e8]">
-                  <Check className="h-2.5 w-2.5 text-foreground stroke-[3]" />
+                  <Check className="h-2.5 w-2.5 text-white stroke-[3]" />
                 </div>
-                <span className="label text-foreground/92">{selectedCount} selected</span>
+                <span className="label text-[#241d17]">{selectedCount} selected</span>
               </div>
-              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar md:flex-wrap">
+
+              <div className="ml-0 flex min-w-0 flex-1 items-center gap-2 overflow-x-auto no-scrollbar md:ml-2">
                 <button
                   onClick={onToggleSelectAll}
                   title={allSelected ? 'Deselect all' : 'Select all'}
                   aria-label={allSelected ? 'Deselect all' : 'Select all'}
-                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-foreground/7 text-foreground/82 transition-colors hover:bg-foreground/10 hover:text-foreground"
+                  className="inline-flex h-10 flex-shrink-0 items-center justify-center rounded-full border border-[#d8cbb8] bg-white/55 px-3 text-[#6b5646] transition-colors hover:bg-white"
                 >
                   {allSelected ? <X className="h-4.5 w-4.5" /> : <CheckCheck className="h-4.5 w-4.5" />}
                 </button>
@@ -68,33 +56,43 @@ export function SelectionBar({
                   onClick={onDownload}
                   title="Download selected"
                   aria-label="Download selected"
-                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-foreground/7 text-foreground/82 transition-colors hover:bg-foreground/10 hover:text-foreground"
+                  className="inline-flex h-10 flex-shrink-0 items-center gap-2 rounded-full border border-[#d8cbb8] bg-white/55 px-3 text-[#6b5646] transition-colors hover:bg-white"
                 >
-                  <Download className="h-4.5 w-4.5" />
+                  <Download className="h-4 w-4" />
+                  <span className="label">Download</span>
                 </button>
                 <button
                   onClick={onLike}
                   title="Like selected photos"
                   aria-label="Like selected photos"
-                  className="flex h-9 flex-shrink-0 items-center gap-1.5 rounded-full bg-foreground/7 px-3 text-foreground/82 transition-colors hover:bg-foreground/10 hover:text-foreground"
+                  className="inline-flex h-10 flex-shrink-0 items-center gap-2 rounded-full border border-[#d8cbb8] bg-white/55 px-3 text-[#6b5646] transition-colors hover:bg-white"
                 >
-                  <Heart className="h-4 w-4 flex-shrink-0" />
-                  <span className="label">Like selected</span>
+                  <Heart className="h-4 w-4" />
+                  <span className="label">Like</span>
                 </button>
                 <button
                   onClick={onAddToAlbum}
-                  title="Add to album to share"
-                  aria-label="Add to album"
-                  className="flex h-9 flex-shrink-0 items-center gap-1.5 rounded-full bg-rose-accent/92 px-3 text-white transition-colors hover:bg-rose-accent"
+                  title="Add to print album"
+                  aria-label="Add to print album"
+                  className="inline-flex h-10 flex-shrink-0 items-center gap-2 rounded-full bg-rose-accent px-3 text-white transition-colors hover:bg-rose-accent/90"
                 >
-                  <Plus className="h-4 w-4 flex-shrink-0" />
-                  <span className="label">Add to album</span>
+                  <Plus className="h-4 w-4" />
+                  <span className="label">Add to print album</span>
                 </button>
               </div>
+
+              <button
+                onClick={onExit}
+                title="Exit selection"
+                aria-label="Exit selection"
+                className="ml-auto inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-[#d8cbb8] bg-white/70 text-[#6b5646] transition-colors hover:bg-white"
+              >
+                <X className="h-4.5 w-4.5" />
+              </button>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
+          </div>
+        </div>
+      </div>
+    ) : null
   );
 }

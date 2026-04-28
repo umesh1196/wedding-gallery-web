@@ -82,7 +82,7 @@ export function SelectedPersonHero({
                     onClick={onAddSelectedToAlbum}
                     className="rounded-full bg-rose-accent px-4 py-2.5 label text-white transition-colors hover:bg-rose-accent/90"
                   >
-                    Add to Album
+                    Add to Print Album
                   </button>
                 </>
               ) : (

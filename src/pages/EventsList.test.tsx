@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import EventsList from './EventsList';
 import { useSessionStore } from '../store/sessionStore';
+import { FeedbackProvider } from '../components/FeedbackProvider';
 
 describe('EventsList', () => {
   beforeEach(() => {
@@ -42,9 +43,11 @@ describe('EventsList', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     render(
-      <MemoryRouter>
-        <EventsList />
-      </MemoryRouter>
+      <FeedbackProvider>
+        <MemoryRouter>
+          <EventsList />
+        </MemoryRouter>
+      </FeedbackProvider>
     );
 
     await waitFor(() => {
@@ -58,6 +61,12 @@ describe('EventsList', () => {
     });
 
     expect(await screen.findByText('Engagement')).toBeInTheDocument();
-    expect(screen.getAllByText('24 photos').length).toBeGreaterThan(0);
+    expect(screen.getByText('Photos')).toBeInTheDocument();
+    expect(screen.getByText('Chapters')).toBeInTheDocument();
+    expect(screen.getByText('Print Albums')).toBeInTheDocument();
+    expect(screen.getAllByText('24 Photos').length).toBeGreaterThan(0);
+    expect(screen.getByText('Feb 8, 2026')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /download all/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /share all/i })).toBeInTheDocument();
   });
 });
